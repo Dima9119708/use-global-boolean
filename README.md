@@ -2,6 +2,51 @@
 
 ## Examples
 
+# 1
+
+```tsx
+    const Menu = () => {
+        const { onTrue } = useGlobalBoolean();
+
+        return (
+            <Menu>
+                <MenuItem onClick={() => onTrue('modal_welcome')}>Welcome</MenuItem>
+                <MenuItem>Logout</MenuItem>
+            </Menu>
+        );
+    }
+
+    const WelcomeModal = () => {
+        const [opened, { onFalse }] = useRegisterBoolean('modal_welcome');
+
+        return (
+            <Dialog opened={opened} onClose={onFalse}>
+                { /*.....*/ }
+            </Dialog>
+        );
+    }
+
+    const App = () => {
+        return (
+            <>
+                <header>
+                    <Logo />
+
+                    { items.map((item) => <Link {...item} />) }
+                    
+                    <Menu />
+                </header>
+                
+                <WelcomeModal />
+            </>
+        );
+    }
+    
+    export default DrawerExample;
+```
+
+# 2
+
 ```tsx
     const Button = () => {
         const { onToggle } = useGlobalBoolean();
@@ -23,7 +68,7 @@
         );
     };
 
-    const DrawerExample = () => {
+    const App = () => {
         return (
             <>
                 <MantineButton />
