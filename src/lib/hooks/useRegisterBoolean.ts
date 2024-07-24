@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 import { useComponentName } from './useComponentName.ts';
 
@@ -12,7 +12,6 @@ export const useRegisterBoolean = <Args = unknown>(
     initialArgs: Args = null as Args,
 ): [boolean, { onTrue: () => void; onFalse: () => void; onToggle: () => void; args: Args }] => {
     const componentName = useComponentName();
-    const initial = useRef(false);
 
     const [boolean, setBoolean] = useState(initialBoolean);
     const [args, setArgs] = useState<Args>(initialArgs);
@@ -23,7 +22,7 @@ export const useRegisterBoolean = <Args = unknown>(
 
     const onToggle = useCallback(() => setBoolean((prev) => !prev), []);
 
-    if (!initial.current) {
+    const subscribe = useCallback(() => {
         if (booleanStore.has(uniqueName)) {
             const data = booleanStore.get(uniqueName)!;
 
@@ -37,18 +36,11 @@ export const useRegisterBoolean = <Args = unknown>(
                 setArgs: (args) => setArgs(args as unknown as Args),
                 listeners: new Set(),
             });
-
-            initial.current = true;
         }
-    }
+        return () => booleanStore.delete(uniqueName);
+    }, [componentName, onFalse, onToggle, onTrue, uniqueName]);
 
-    useEffect(
-        () =>
-            function cleanup() {
-                booleanStore.delete(uniqueName);
-            },
-        [uniqueName],
-    );
+    useSyncExternalStore(subscribe, () => null);
 
     useEffect(() => {
         const data = booleanStore.get(uniqueName);

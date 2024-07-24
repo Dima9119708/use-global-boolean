@@ -1,28 +1,32 @@
 import { useEffect } from 'react';
 
-import { useGlobalBoolean, useRegisterBoolean } from './lib';
+import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from './lib';
 
 const Test = () => {
-    const { onTrue } = useGlobalBoolean();
+    const { onToggle } = useGlobalBoolean();
+
+    const isTest = useWatchBoolean('test');
 
     useEffect(() => {
-        onTrue('b');
-    }, []);
+        console.log('isTest =>', isTest);
+    }, [isTest]);
 
-    return <div>1</div>;
+    return <div onClick={() => onToggle('test')}>1</div>;
 };
 
 const Header = () => {
-    const [, { onToggle }] = useRegisterBoolean('b');
+    const [show, { onToggle }] = useRegisterBoolean('test');
 
     return (
-        <h1
-            onClick={() => {
-                onToggle();
-            }}
-        >
-            App
-        </h1>
+        show && (
+            <h1
+                onClick={() => {
+                    onToggle();
+                }}
+            >
+                App
+            </h1>
+        )
     );
 };
 
