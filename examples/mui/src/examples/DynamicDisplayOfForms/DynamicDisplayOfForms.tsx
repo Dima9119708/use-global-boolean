@@ -163,7 +163,7 @@ const Form4 = () => {
 
 const ButtonShowForm4 = () => {
     const { onTrue } = useGlobalBoolean();
-    const showForm3 = useWatchBoolean('modal2');
+    const [showForm3] = useWatchBoolean('form3');
     return (
         <Button disabled={!showForm3} variant="outlined" onClick={() => onTrue('form4')}>
             Show form 4
@@ -173,7 +173,7 @@ const ButtonShowForm4 = () => {
 
 const ButtonShowForm3 = () => {
     const { onTrue } = useGlobalBoolean();
-    const showForm2 = useWatchBoolean('form2');
+    const [showForm2] = useWatchBoolean('form2');
 
     return (
         <Button disabled={!showForm2} variant="outlined" onClick={() => onTrue('form3')}>
@@ -184,7 +184,7 @@ const ButtonShowForm3 = () => {
 
 const ButtonShowForm2 = () => {
     const { onTrue } = useGlobalBoolean();
-    const showForm1 = useWatchBoolean('form1');
+    const [showForm1] = useWatchBoolean('form1');
 
     return (
         <Button disabled={!showForm1} variant="outlined" onClick={() => onTrue('form2')}>
@@ -195,7 +195,7 @@ const ButtonShowForm2 = () => {
 
 const ButtonShowForm1 = () => {
     const { onTrue } = useGlobalBoolean();
-    const buttonUndisabled = useWatchBoolean('enable show form 1');
+    const [buttonUndisabled] = useWatchBoolean('enable show form 1');
 
     return (
         <Button variant="outlined" disabled={!buttonUndisabled} onClick={() => onTrue('form1')}>

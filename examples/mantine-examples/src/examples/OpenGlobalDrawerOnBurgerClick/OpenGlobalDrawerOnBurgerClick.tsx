@@ -21,7 +21,7 @@ const MantineDrawer = () => {
 const MantineBurger = () => {
     const { onTrue } = useGlobalBoolean();
 
-    const opened = useWatchBoolean('drawer');
+    const [opened] = useWatchBoolean('drawer');
 
     return <Burger opened={opened} onClick={() => onTrue('drawer')} />;
 };

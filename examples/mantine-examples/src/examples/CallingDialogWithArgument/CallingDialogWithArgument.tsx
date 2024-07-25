@@ -12,7 +12,7 @@ const MantineButton = () => {
 };
 
 const MantineDialog = () => {
-    const [opened, { onFalse, args }] = useRegisterBoolean('dialog', false, {
+    const [opened, { onFalse, data }] = useRegisterBoolean('dialog', false, {
         email: '',
     });
 
@@ -25,7 +25,7 @@ const MantineDialog = () => {
             <Group align="flex-end">
                 <TextInput
                     placeholder="hello@gluesticker.com"
-                    value={args.email}
+                    value={data.email}
                     onChange={() => {}}
                     style={{ flex: 1 }}
                 />

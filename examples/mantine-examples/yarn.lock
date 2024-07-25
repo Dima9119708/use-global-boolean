@@ -1871,7 +1871,7 @@ use-composed-ref@^1.3.0:
   integrity sha512-GLMG0Jc/jiKov/3Ulid1wbv3r54K9HlMW29IWcDFPEqFkSO2nS0MuefWgMJpeHQ9YJeXDL3ZUF+P3jdXlZX/cQ==
 
 "use-global-boolean@file:../..":
-  version "0.0.1-alpha.4"
+  version "0.0.1-alpha.7"
   dependencies:
     react "^18.3.1"
     react-dom "^18.3.1"

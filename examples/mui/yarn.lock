@@ -2050,7 +2050,7 @@ uri-js@^4.2.2:
     punycode "^2.1.0"
 
 "use-global-boolean@file:../..":
-  version "0.0.1-alpha.4"
+  version "0.0.1-alpha.7"
   dependencies:
     react "^18.3.1"
     react-dom "^18.3.1"

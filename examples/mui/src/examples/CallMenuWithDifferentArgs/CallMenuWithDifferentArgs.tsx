@@ -11,17 +11,17 @@ interface IMenu {
 }
 
 const MuiMenuItem = () => {
-    const [open, { onFalse, args }] = useRegisterBoolean<null | IMenu>('menu', false);
+    const [open, { onFalse, data }] = useRegisterBoolean<null | IMenu>('menu', false);
 
     return (
-        <Menu anchorEl={args?.target} open={open} onClose={onFalse}>
+        <Menu anchorEl={data?.target} open={open} onClose={onFalse}>
             <MenuItem onClick={onFalse}>Profile</MenuItem>
-            {args?.ai && (
+            {data?.ai && (
                 <MenuItem onClick={onFalse} sx={{ bgcolor: '#9c27b0' }}>
                     AI
                 </MenuItem>
             )}
-            {args?.admin && (
+            {data?.admin && (
                 <MenuItem onClick={onFalse} sx={{ bgcolor: '#1acdb8' }}>
                     Admin
                 </MenuItem>
