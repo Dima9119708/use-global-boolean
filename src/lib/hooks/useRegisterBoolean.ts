@@ -8,18 +8,18 @@ import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts'
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import type { BooleanNames } from '../types/types.ts';
 
-export const useRegisterBoolean = <Args = unknown>(
+export const useRegisterBoolean = <Data = unknown>(
     uniqueName: BooleanNames,
     initialBoolean: boolean = false,
-    initialArgs: Args = null as Args,
-): [boolean, { onTrue: () => void; onFalse: () => void; onToggle: () => void; args: Args }] => {
+    initialData: Data = null as Data,
+): [boolean, { onTrue: () => void; onFalse: () => void; onToggle: () => void; data: Data }] => {
     const componentName = useComponentName();
     const initial = useRef(false);
 
     const { cleanUp, isMoreThanOneReRender } = useIsStrictMode(uniqueName);
 
     const [boolean, setBoolean] = useState(initialBoolean);
-    const [args, setArgs] = useState<Args>(initialArgs);
+    const [data, setData] = useState<Data>(initialData);
 
     const onTrue = useCallback(() => setBoolean(true), []);
 
@@ -41,7 +41,8 @@ export const useRegisterBoolean = <Args = unknown>(
             onFalse,
             onToggle,
             componentName,
-            setArgs: (args) => setArgs(args as unknown as Args),
+            booleanAndData: [boolean, data],
+            setData: (args) => setData(args as unknown as Data),
         });
 
         initial.current = true;
@@ -55,9 +56,16 @@ export const useRegisterBoolean = <Args = unknown>(
 
     useEffect(() => {
         if (booleanStateListeners.has(uniqueName)) {
+            booleanStateManager.set(
+                uniqueName,
+                Object.assign(booleanStateManager.get(uniqueName)!, {
+                    booleanAndData: [boolean, data],
+                }),
+            );
+
             booleanStateListeners.get(uniqueName)!.forEach((listener) => listener(boolean));
         }
-    }, [uniqueName, boolean]);
+    }, [uniqueName, boolean, data]);
 
     return [
         boolean,
@@ -65,7 +73,7 @@ export const useRegisterBoolean = <Args = unknown>(
             onTrue,
             onFalse,
             onToggle,
-            args,
+            data,
         },
     ];
 };

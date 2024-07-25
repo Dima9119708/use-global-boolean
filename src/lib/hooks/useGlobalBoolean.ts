@@ -7,11 +7,11 @@ import type { BooleanNames } from '../types/types.ts';
 export const useGlobalBoolean = () => {
     const componentName = useComponentName();
 
-    const onTrue = <Args>(uniqueName: BooleanNames, args?: Args) => {
+    const onTrue = <Data>(uniqueName: BooleanNames, data: Data = null as Data) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
-            disclosureActions.setArgs(args);
+            disclosureActions.setData(data);
             disclosureActions.onTrue();
         } else {
             console.error(errorMessages.notRegisteredName(componentName, uniqueName));
@@ -28,11 +28,11 @@ export const useGlobalBoolean = () => {
         }
     };
 
-    const onToggle = <Args>(uniqueName: BooleanNames, args?: Args) => {
+    const onToggle = <Data>(uniqueName: BooleanNames, data: Data = null as Data) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
-            disclosureActions.setArgs(args);
+            disclosureActions.setData(data);
             disclosureActions.onToggle();
         } else {
             console.error(errorMessages.notRegisteredName(componentName, uniqueName));

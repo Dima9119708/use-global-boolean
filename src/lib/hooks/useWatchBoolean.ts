@@ -1,43 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
-import { useComponentName } from './useComponentName.ts';
-
-import { errorMessages } from '../errorMessages.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
+import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
+import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import type { BooleanNames } from '../types/types.ts';
 
-export const useWatchBoolean = (uniqueName: BooleanNames, initialBoolean: boolean = false) => {
-    const [boolean, setBoolean] = useState(initialBoolean);
-    const componentName = useComponentName();
+const defaultValues = [false, null];
 
-    useEffect(() => {
-        const startTime = performance.now();
-
-        const listener = (open: boolean) => {
-            const timeElapsed = performance.now() - startTime;
-
-            if (boolean !== open && timeElapsed < 10) {
-                console.error(errorMessages.stateChangedTooQuickly(componentName), {
-                    uniqueName,
-                    initialBoolean,
-                    boolean,
-                    timeElapsed,
-                });
+export const useWatchBoolean = <Payload = unknown>(
+    uniqueName: BooleanNames,
+): BooleanAndData<Payload> => {
+    const subscribe = useCallback<(onStoreChange: () => void) => () => void>(
+        (listener) => {
+            if (booleanStateListeners.has(uniqueName)) {
+                booleanStateListeners.get(uniqueName)!.add(listener);
+            } else {
+                booleanStateListeners.set(uniqueName, new Set([listener]));
             }
 
-            setBoolean(open);
-        };
+            return () => {
+                booleanStateListeners.get(uniqueName)!.delete(listener);
+            };
+        },
+        [uniqueName],
+    );
 
-        if (booleanStateListeners.has(uniqueName)) {
-            booleanStateListeners.get(uniqueName)!.add(listener);
-        } else {
-            booleanStateListeners.set(uniqueName, new Set([listener]));
+    const getSnapshot = useCallback(() => {
+        if (booleanStateManager.has(uniqueName)) {
+            return booleanStateManager.get(uniqueName)!.booleanAndData as BooleanAndData<Payload>;
         }
 
-        return () => {
-            booleanStateListeners.get(uniqueName)!.delete(listener);
-        };
-    }, [initialBoolean, uniqueName, componentName]);
+        return defaultValues as BooleanAndData<Payload>;
+    }, [uniqueName]);
 
-    return boolean;
+    return useSyncExternalStore(subscribe, getSnapshot);
 };

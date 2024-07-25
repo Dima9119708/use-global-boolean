@@ -5,11 +5,9 @@ import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from './lib';
 const Test = () => {
     const { onToggle } = useGlobalBoolean();
 
-    const isTest = useWatchBoolean('test');
+    const [isTest] = useWatchBoolean<{ test: boolean }>('test');
 
-    useEffect(() => {
-        console.log('isTest =>', isTest);
-    }, [isTest]);
+    useEffect(() => {}, [isTest]);
 
     return <div onClick={() => onToggle('test')}>1</div>;
 };
