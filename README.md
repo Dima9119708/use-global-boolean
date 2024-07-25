@@ -29,7 +29,7 @@ import { useGlobalBoolean, useRegisterBoolean } from "use-global-boolean";
 
 // First, register a modal with a unique name.
 const WelcomeModal = () => {
-    const [opened, { onFalse, onTrue, onToggle, args }] = useRegisterBoolean('modal_welcome');
+    const [opened, { onFalse }] = useRegisterBoolean('modal_welcome');
 
     return (
         <Dialog opened={opened} onClose={onFalse}>
@@ -54,12 +54,6 @@ const App = () => {
     return (
         <>
             <header>
-                {/* Your project logo */}
-                <Logo />
-
-                {/* Some additional links */}
-                { items.map((item) => <Link {...item} />) }
-
                 <HeaderMenu />
             </header>
 
@@ -78,11 +72,11 @@ import { useGlobalBoolean, useRegisterBoolean } from "use-global-boolean";
 
 const EmailModal = () => {
     // Register the modal with a unique identifier and initial parameters
-    const [opened, { args, onFalse }] = useRegisterBoolean('email_modal', false, { email: '' });
+    const [opened, { data, onFalse }] = useRegisterBoolean('email_modal', false, { email: '' });
 
     return (
       <Modal opened={opened} onClose={onFalse}>
-         <input value={args.email} />
+         <input value={data.email} />
          <button>Send email</button>
       </Modal>
     )
@@ -94,6 +88,7 @@ const ButtonOpenEmailModal = () => {
     const onOpenEmailModal = () => {
         // Logic and validation...
         const email = 'hello@world.com';
+
         onTrue('email_modal', { email })
     };
 
