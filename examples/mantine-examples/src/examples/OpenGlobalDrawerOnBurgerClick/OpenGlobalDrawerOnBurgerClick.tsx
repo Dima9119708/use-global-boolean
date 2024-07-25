@@ -1,8 +1,8 @@
-import { Box, Burger, Drawer, Group, Slider } from '@mantine/core';
+import { Box, Burger, Drawer, Group } from '@mantine/core';
 import { MantineLogo } from '@mantinex/mantine-logo';
 import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from 'use-global-boolean';
 
-import classes from './DrawerExample.module.css';
+import classes from './OpenGlobalDrawerOnBurgerClick.module.css';
 
 const MantineDrawer = () => {
     const [opened, { onFalse }] = useRegisterBoolean('drawer', false);
@@ -26,7 +26,7 @@ const MantineBurger = () => {
     return <Burger opened={opened} onClick={() => onTrue('drawer')} />;
 };
 
-export default function DrawerExample() {
+export default function OpenGlobalDrawerOnBurgerClick() {
     return (
         <Box pb={10}>
             <header className={classes.header}>

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useComponentName } from './useComponentName.ts';
+import { useIsStrictMode } from './useIsStrictMode.ts';
 
 import { errorMessages } from '../errorMessages.ts';
-import { booleanStore } from '../store/store.ts';
+import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
+import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import type { BooleanNames } from '../types/types.ts';
 
 export const useRegisterBoolean = <Args = unknown>(
@@ -12,6 +14,9 @@ export const useRegisterBoolean = <Args = unknown>(
     initialArgs: Args = null as Args,
 ): [boolean, { onTrue: () => void; onFalse: () => void; onToggle: () => void; args: Args }] => {
     const componentName = useComponentName();
+    const initial = useRef(false);
+
+    const { cleanUp, isMoreThanOneReRender } = useIsStrictMode(uniqueName);
 
     const [boolean, setBoolean] = useState(initialBoolean);
     const [args, setArgs] = useState<Args>(initialArgs);
@@ -22,31 +27,35 @@ export const useRegisterBoolean = <Args = unknown>(
 
     const onToggle = useCallback(() => setBoolean((prev) => !prev), []);
 
-    const subscribe = useCallback(() => {
-        if (booleanStore.has(uniqueName)) {
-            const data = booleanStore.get(uniqueName)!;
+    if (!initial.current) {
+        if (booleanStateManager.has(uniqueName)) {
+            const data = booleanStateManager.get(uniqueName)!;
 
-            console.error(errorMessages.alreadyRegisteredName(data.componentName, uniqueName));
-        } else {
-            booleanStore.set(uniqueName, {
-                onTrue: onTrue,
-                onFalse: onFalse,
-                onToggle,
-                componentName,
-                setArgs: (args) => setArgs(args as unknown as Args),
-                listeners: new Set(),
-            });
+            if (!isMoreThanOneReRender()) {
+                console.error(errorMessages.alreadyRegisteredName(data.componentName, uniqueName));
+            }
         }
-        return () => booleanStore.delete(uniqueName);
-    }, [componentName, onFalse, onToggle, onTrue, uniqueName]);
 
-    useSyncExternalStore(subscribe, () => null);
+        booleanStateManager.set(uniqueName, {
+            onTrue,
+            onFalse,
+            onToggle,
+            componentName,
+            setArgs: (args) => setArgs(args as unknown as Args),
+        });
+
+        initial.current = true;
+    }
 
     useEffect(() => {
-        const data = booleanStore.get(uniqueName);
+        return cleanUp(() => {
+            booleanStateManager.delete(uniqueName);
+        });
+    }, []);
 
-        if (data) {
-            data.listeners.forEach((listener) => listener(boolean));
+    useEffect(() => {
+        if (booleanStateListeners.has(uniqueName)) {
+            booleanStateListeners.get(uniqueName)!.forEach((listener) => listener(boolean));
         }
     }, [uniqueName, boolean]);
 

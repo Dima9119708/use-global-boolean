@@ -1,4 +1,4 @@
-export const booleanStore = new Map<
+export const booleanStateManager = new Map<
     string,
     {
         onTrue: () => void;
@@ -6,6 +6,5 @@ export const booleanStore = new Map<
         onFalse: () => void;
         onToggle: () => void;
         componentName: string;
-        listeners: Set<(bool: boolean) => void>;
     }
 >();

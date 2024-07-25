@@ -1,14 +1,14 @@
 import { useComponentName } from './useComponentName.ts';
 
 import { errorMessages } from '../errorMessages.ts';
-import { booleanStore } from '../store/store.ts';
+import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import type { BooleanNames } from '../types/types.ts';
 
 export const useGlobalBoolean = () => {
     const componentName = useComponentName();
 
     const onTrue = <Args>(uniqueName: BooleanNames, args?: Args) => {
-        const disclosureActions = booleanStore.get(uniqueName);
+        const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
             disclosureActions.setArgs(args);
@@ -19,7 +19,7 @@ export const useGlobalBoolean = () => {
     };
 
     const onFalse = (uniqueName: BooleanNames) => {
-        const disclosureActions = booleanStore.get(uniqueName);
+        const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
             disclosureActions.onFalse();
@@ -29,7 +29,7 @@ export const useGlobalBoolean = () => {
     };
 
     const onToggle = <Args>(uniqueName: BooleanNames, args?: Args) => {
-        const disclosureActions = booleanStore.get(uniqueName);
+        const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
             disclosureActions.setArgs(args);

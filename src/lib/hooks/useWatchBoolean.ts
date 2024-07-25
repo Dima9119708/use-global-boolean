@@ -3,12 +3,11 @@ import { useEffect, useState } from 'react';
 import { useComponentName } from './useComponentName.ts';
 
 import { errorMessages } from '../errorMessages.ts';
-import { booleanStore } from '../store/store.ts';
+import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
 import type { BooleanNames } from '../types/types.ts';
 
 export const useWatchBoolean = (uniqueName: BooleanNames, initialBoolean: boolean = false) => {
     const [boolean, setBoolean] = useState(initialBoolean);
-
     const componentName = useComponentName();
 
     useEffect(() => {
@@ -29,18 +28,14 @@ export const useWatchBoolean = (uniqueName: BooleanNames, initialBoolean: boolea
             setBoolean(open);
         };
 
-        const data = booleanStore.get(uniqueName);
-
-        if (data) {
-            data.listeners.add(listener);
+        if (booleanStateListeners.has(uniqueName)) {
+            booleanStateListeners.get(uniqueName)!.add(listener);
         } else {
-            console.error(errorMessages.notRegisteredName(componentName, uniqueName));
+            booleanStateListeners.set(uniqueName, new Set([listener]));
         }
 
         return () => {
-            if (data) {
-                data.listeners.delete(listener);
-            }
+            booleanStateListeners.get(uniqueName)!.delete(listener);
         };
     }, [initialBoolean, uniqueName, componentName]);
 

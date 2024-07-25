@@ -35,7 +35,7 @@ const MantineDialog = () => {
     );
 };
 
-function DrawerExample() {
+function CallingDialogWithArgument() {
     return (
         <>
             <Group justify="center">
@@ -47,4 +47,4 @@ function DrawerExample() {
     );
 }
 
-export default DrawerExample;
+export default CallingDialogWithArgument;
