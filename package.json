@@ -22,13 +22,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^18.3.1"
   },
   "peerDependencies": {
-    "react": "^16.8.0 || ^17 || ^18 || ^19",
-    "react-dom": "^16.8.0 || ^17 || ^18 || ^19"
+    "react": ">=16.8"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dima9119708/use-global-boolean.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dima9119708/use-global-boolean/issues"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Dima9119708/use-global-boolean",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/node": "^20.14.11",
