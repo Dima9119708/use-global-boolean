@@ -8,6 +8,19 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "react",
+    "state",
+    "manager",
+    "management",
+    "use boolean",
+    "use global boolean",
+    "boolean",
+    "global state",
+    "global boolean state",
+    "global boolean management",
+    "store"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.es.js",
