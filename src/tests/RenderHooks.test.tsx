@@ -201,13 +201,39 @@ describe('useWatchBoolean', () => {
 
         expect(watchBoolean.result.current).toEqual([true, initialData]);
     });
+    test('should retain registered boolean state and initial data even when onTrue is called without new data', () => {
+        const initialData = { test: 'test' };
+
+        renderHook(() => useRegisterBoolean(name, true, initialData));
+        const watchBoolean = renderHook(() => useWatchBoolean(name));
+        const globalBoolean = renderHook(() => useGlobalBoolean());
+
+        act(() => {
+            globalBoolean.result.current.onTrue(name);
+        });
+
+        expect(watchBoolean.result.current).toEqual([true, initialData]);
+    });
+    test('should retain registered boolean state and initial data even when onToggle is called without new data', () => {
+        const initialData = { test: 'test' };
+
+        renderHook(() => useRegisterBoolean(name, true, initialData));
+        const watchBoolean = renderHook(() => useWatchBoolean(name));
+        const globalBoolean = renderHook(() => useGlobalBoolean());
+
+        act(() => {
+            globalBoolean.result.current.onTrue(name);
+        });
+
+        expect(watchBoolean.result.current).toEqual([true, initialData]);
+    });
     test('should update the boolean state to false when onFalse is called', () => {
         const watchBoolean = renderHook(() => useWatchBoolean(name));
 
         const registerBoolean = renderHook(() => useRegisterBoolean(name, true));
 
         act(() => {
-            registerBoolean.result.current[1].onFalse();
+            registerBoolean.result.current[1].onToggle();
         });
 
         expect(watchBoolean.result.current).toEqual([false, null]);
@@ -222,6 +248,7 @@ describe('useWatchBoolean', () => {
             useWatchBoolean(name);
         });
 
+        expect(booleanStateListeners.get(name)!).toBeInstanceOf(Set);
         expect(booleanStateListeners.get(name)!.size).toBe(6);
     });
     test('should update all watchers when the boolean state is changed', () => {
