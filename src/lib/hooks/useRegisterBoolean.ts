@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-import { useComponentName } from './useComponentName.ts';
-import { useIsStrictMode } from './useIsStrictMode.ts';
+import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { errorMessages } from '../errorMessages.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
+import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import type { BooleanNames } from '../types/types.ts';
 
@@ -12,14 +11,22 @@ export const useRegisterBoolean = <Data = unknown>(
     uniqueName: BooleanNames,
     initialBoolean: boolean = false,
     initialData: Data = null as Data,
-): [boolean, { onTrue: () => void; onFalse: () => void; onToggle: () => void; data: Data }] => {
-    const componentName = useComponentName();
+): [
+    boolean,
+    {
+        onTrue: () => void;
+        onFalse: () => void;
+        onToggle: () => void;
+        data: Data;
+        setData: Dispatch<SetStateAction<Data>>;
+    },
+] => {
     const initial = useRef(false);
-
-    const { cleanUp, isMoreThanOneReRender } = useIsStrictMode(uniqueName);
 
     const [boolean, setBoolean] = useState(initialBoolean);
     const [data, setData] = useState<Data>(initialData);
+
+    const defaultValues = useMemo(() => [initialBoolean, initialData] as BooleanAndData<Data>, []);
 
     const onTrue = useCallback(() => setBoolean(true), []);
 
@@ -27,31 +34,35 @@ export const useRegisterBoolean = <Data = unknown>(
 
     const onToggle = useCallback(() => setBoolean((prev) => !prev), []);
 
-    if (!initial.current) {
-        if (booleanStateManager.has(uniqueName)) {
-            const data = booleanStateManager.get(uniqueName)!;
-
-            if (!isMoreThanOneReRender()) {
-                console.error(errorMessages.alreadyRegisteredName(data.componentName, uniqueName));
-            }
-        }
-
+    const registerGlobalBooleanState = useCallback(() => {
         booleanStateManager.set(uniqueName, {
             onTrue,
             onFalse,
             onToggle,
-            componentName,
-            booleanAndData: [boolean, data],
+            booleanAndData: defaultValues,
             setData: (args) => setData(args as unknown as Data),
         });
+    }, [defaultValues, onFalse, onToggle, onTrue, uniqueName]);
+
+    if (!initial.current) {
+        if (booleanStateManager.has(uniqueName)) {
+            console.error(errorMessages.alreadyRegisteredName(uniqueName));
+        }
+
+        registerGlobalBooleanState();
 
         initial.current = true;
     }
 
     useEffect(() => {
-        return cleanUp(() => {
+        // For strict mode
+        if (!booleanStateManager.has(uniqueName)) {
+            registerGlobalBooleanState();
+        }
+
+        return () => {
             booleanStateManager.delete(uniqueName);
-        });
+        };
     }, []);
 
     useEffect(() => {
@@ -74,6 +85,7 @@ export const useRegisterBoolean = <Data = unknown>(
             onFalse,
             onToggle,
             data,
+            setData,
         },
     ];
 };

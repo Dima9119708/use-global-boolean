@@ -8,6 +8,5 @@ export const booleanStateManager = new Map<
         onFalse: () => void;
         onToggle: () => void;
         booleanAndData: BooleanAndData;
-        componentName: string;
     }
 >();
