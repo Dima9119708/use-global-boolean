@@ -65,7 +65,7 @@ const App = () => {
 export default App
 ```
 
-## 👀 watch / useWatchBoolean
+## 👀 watchBoolean / useWatchBoolean
 ```tsx
 import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from "use-global-boolean";
 
