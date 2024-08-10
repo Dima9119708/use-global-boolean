@@ -1,15 +1,15 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
 import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from '../lib';
 
-afterEach(() => {
-    cleanup();
-});
+let uniqueName: string;
 
-const uniqueName = generateUniqueName();
+beforeEach(() => {
+    uniqueName = generateUniqueName();
+});
 
 describe('Boolean State Management in Components', () => {
     test('should update aria-modal attribute of dialog after onTrue is called', () => {
@@ -87,13 +87,26 @@ describe('Boolean State Management in Components', () => {
     });
 
     test('should increment render count once when WatchComponent is rendered before RegisterComponent with useWatchBoolean and initial values', () => {
-        let countRerender = 0;
+        let countRerenderWatchComponentAsHook = 0;
+        let countRerenderWatchComponentAsFunction = 0;
 
-        const WatchComponent = () => {
+        const WatchComponentAsHook = () => {
             const [, data] = useWatchBoolean(uniqueName, true, { initial: { name: 'test' } });
 
             useEffect(() => {
-                ++countRerender;
+                ++countRerenderWatchComponentAsHook;
+            }, [data]);
+
+            return null;
+        };
+
+        const WatchComponentAsFunction = () => {
+            const { watchBoolean } = useGlobalBoolean();
+
+            const [, data] = watchBoolean(uniqueName, true, { initial: { name: 'test' } });
+
+            useEffect(() => {
+                ++countRerenderWatchComponentAsFunction;
             }, [data]);
 
             return null;
@@ -108,7 +121,8 @@ describe('Boolean State Management in Components', () => {
         const TestComponent = () => {
             return (
                 <>
-                    <WatchComponent />
+                    <WatchComponentAsHook />
+                    <WatchComponentAsFunction />
                     <RegisterComponent />
                 </>
             );
@@ -116,17 +130,31 @@ describe('Boolean State Management in Components', () => {
 
         render(<TestComponent />);
 
-        expect(countRerender).toBe(1);
+        expect(countRerenderWatchComponentAsHook).toBe(1);
+        expect(countRerenderWatchComponentAsFunction).toBe(1);
     });
     test('should increment render count twice when WatchComponent is rendered before RegisterComponent with useWatchBoolean without initial values', () => {
-        let countRerender = 0;
+        let countRerenderWatchComponentAsHook = 0;
+        let countRerenderWatchComponentAsFunction = 0;
 
-        const WatchComponent = () => {
-            const [, data] = useWatchBoolean(uniqueName);
+        const WatchComponentAsHook = () => {
+            const result = useWatchBoolean(uniqueName);
 
             useEffect(() => {
-                ++countRerender;
-            }, [data]);
+                ++countRerenderWatchComponentAsHook;
+            }, [result]);
+
+            return null;
+        };
+
+        const WatchComponentAsFunction = () => {
+            const { watchBoolean } = useGlobalBoolean();
+
+            const result = watchBoolean(uniqueName);
+
+            useEffect(() => {
+                ++countRerenderWatchComponentAsFunction;
+            }, [result]);
 
             return null;
         };
@@ -140,7 +168,8 @@ describe('Boolean State Management in Components', () => {
         const TestComponent = () => {
             return (
                 <>
-                    <WatchComponent />
+                    <WatchComponentAsHook />
+                    <WatchComponentAsFunction />
                     <RegisterComponent />
                 </>
             );
@@ -148,17 +177,31 @@ describe('Boolean State Management in Components', () => {
 
         render(<TestComponent />);
 
-        expect(countRerender).toBe(2);
+        expect(countRerenderWatchComponentAsHook).toBe(2);
+        expect(countRerenderWatchComponentAsFunction).toBe(2);
     });
     test('should increment render count once when RegisterComponent is rendered before WatchComponent', () => {
-        let countRerender = 0;
+        let countRerenderWatchComponentAsHook = 0;
+        let countRerenderWatchComponentAsFunction = 0;
 
-        const WatchComponent = () => {
-            const [, data] = useWatchBoolean(uniqueName);
+        const WatchComponentAsHook = () => {
+            const result = useWatchBoolean(uniqueName);
 
             useEffect(() => {
-                ++countRerender;
-            }, [data]);
+                ++countRerenderWatchComponentAsHook;
+            }, [result]);
+
+            return null;
+        };
+
+        const WatchComponentAsFunction = () => {
+            const { watchBoolean } = useGlobalBoolean();
+
+            const result = watchBoolean(uniqueName);
+
+            useEffect(() => {
+                ++countRerenderWatchComponentAsFunction;
+            }, [result]);
 
             return null;
         };
@@ -173,13 +216,15 @@ describe('Boolean State Management in Components', () => {
             return (
                 <>
                     <RegisterComponent />
-                    <WatchComponent />
+                    <WatchComponentAsFunction />
+                    <WatchComponentAsHook />
                 </>
             );
         };
 
         render(<TestComponent />);
 
-        expect(countRerender).toBe(1);
+        expect(countRerenderWatchComponentAsHook).toBe(2);
+        expect(countRerenderWatchComponentAsFunction).toBe(2);
     });
 });

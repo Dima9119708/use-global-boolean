@@ -32,32 +32,91 @@ const WelcomeModal = () => {
     const [opened, { onFalse }] = useRegisterBoolean('modal_welcome');
 
     return (
-        <Dialog opened={opened} onClose={onFalse}>
-            { /*.....*/ }
-        </Dialog>
+        <dialog open={opened}>
+            <button type="button" onClick={onFalse}>Close</button>
+        </dialog>
     );
 }
 
 // Now, trigger our modal from anywhere in the application.
-const HeaderMenu = () => {
+const Header = () => {
     const { onTrue } = useGlobalBoolean();
 
     return (
-        <Menu>
-            <MenuItem onClick={() => onTrue('modal_welcome')}>Welcome</MenuItem>
-            <MenuItem>Logout</MenuItem>
-        </Menu>
+        <header>
+            {/* ... */}
+            <div role="menu">
+                <button type="button" onClick={() => onTrue('modal_welcome')}>Welcome modal</button>
+                <button type="button">Logout</button>
+            </div>
+        </header>
     );
 }
 
 const App = () => {
     return (
         <>
-            <header>
-                <HeaderMenu />
-            </header>
-
+            <Header />
             <WelcomeModal />
+        </>
+    );
+}
+
+export default App
+```
+
+## 👀 watch / useWatchBoolean
+```tsx
+import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from "use-global-boolean";
+
+const Form = () => {
+    // Using watchBoolean from useGlobalBoolean
+    const { watchBoolean } = useGlobalBoolean();
+    const [isEnabled] = watchBoolean('enable_form');
+
+    // Or using useWatchBoolean directly
+    // const [isEnabled] = useWatchBoolean('enable_form');
+
+
+    return isEnabled && (
+        <form>
+            <label htmlFor="fname">First name:</label>
+            <br />
+            <input type="text" id="fname" name="fname" defaultValue="John" />
+            <br />
+            <label htmlFor="lname">Last name:</label>
+            <br />
+            <input type="text" id="lname" name="lname" defaultValue="Doe" />
+            <br />
+            <br />
+            <input type="submit" value="Submit" />
+        </form>
+    );
+}
+
+const EnableForm = () => {
+    const [checked, { onToogle }] = useRegisterBoolean('enable_form');
+
+    return (
+        <label>
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToogle()}
+            />
+            Enable form
+        </label>
+       
+    );
+}
+
+const App = () => {
+    return (
+        <>
+            {/* ... */}
+            <EnableForm />
+            <Form />
+            {/* ... */}
         </>
     );
 }
@@ -75,25 +134,19 @@ const EmailModal = () => {
     const [opened, { data, onFalse }] = useRegisterBoolean('email_modal', false, { email: '' });
 
     return (
-      <Modal opened={opened} onClose={onFalse}>
+      <dialog open={opened}>
          <input value={data.email} />
-         <button>Send email</button>
-      </Modal>
+         <button type="button" onClick={onFalse}>Close</button>
+         <button type="submit">Send email</button>
+      </dialog>
     )
 }
 
 const ButtonOpenEmailModal = () => {
     const { onTrue } = useGlobalBoolean();
-    
-    const onOpenEmailModal = () => {
-        // Logic and validation...
-        const email = 'hello@world.com';
-
-        onTrue('email_modal', { email })
-    };
 
     // Button to open the email modal, passing parameters
-    return <button onClick={onOpenEmailModal}>Open modal</button>
+    return <button onClick={() => onTrue('email_modal', { email: 'hello@world.com' })}>Open modal</button>
 }
 
 const App = () => (
@@ -123,9 +176,10 @@ import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from "use-globa
 // Now TypeScript will provide suggestions:
 useRegisterBoolean('modal1'); // 'modal1', 'modal2', 'modal3'
 
-const { onTrue, onToggle } = useGlobalBoolean();
+const { onTrue, onToggle, watch } = useGlobalBoolean();
 onTrue('modal1'); // 'modal1', 'modal2', 'modal3'
 onToggle('modal1'); // 'modal1', 'modal2', 'modal3'
+watchBoolean('modal1'); // 'modal1', 'modal2', 'modal3'
 
 useWatchBoolean('modal1'); // 'modal1', 'modal2', 'modal3'
 ```

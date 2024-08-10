@@ -1,4 +1,4 @@
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
@@ -7,21 +7,71 @@ import { errorMessages } from '../lib/errorMessages.ts';
 import { booleanStateListeners } from '../lib/globalStates/booleanStateListeners';
 import { booleanStateManager } from '../lib/globalStates/booleanStateManager';
 
-afterEach(() => {
-    cleanup();
-});
+let name: string;
 
-const name = generateUniqueName();
+beforeEach(() => {
+    name = generateUniqueName();
+});
 
 describe('booleanStateManager', () => {
     test('should remove the state from booleanStateManager after unmount', () => {
-        const name = generateUniqueName();
-
         const { unmount } = renderHook(() => useRegisterBoolean(name));
 
         unmount();
 
         expect(booleanStateManager.get(name)).toBe(undefined);
+    });
+});
+
+describe('booleanStateListeners', () => {
+    test('should remove the state from booleanStateManager after unmounting a single hook', () => {
+        const { unmount } = renderHook(() => useGlobalBoolean().watchBoolean(name));
+
+        expect(booleanStateListeners.size).toBe(1);
+
+        unmount();
+
+        expect(booleanStateListeners.size).toBe(0);
+    });
+    test('should remove the state from booleanStateManager after unmounting multiple hooks one by one', () => {
+        const hook1 = renderHook(() => useGlobalBoolean().watchBoolean(generateUniqueName()));
+        const hook2 = renderHook(() => useGlobalBoolean().watchBoolean(generateUniqueName()));
+        const hook3 = renderHook(() => useGlobalBoolean().watchBoolean(generateUniqueName()));
+        const hook4 = renderHook(() => useGlobalBoolean().watchBoolean(generateUniqueName()));
+        const hook5 = renderHook(() => useGlobalBoolean().watchBoolean(generateUniqueName()));
+
+        expect(booleanStateListeners.size).toBe(5);
+
+        hook1.unmount();
+
+        expect(booleanStateListeners.size).toBe(4);
+
+        hook2.unmount();
+        hook3.unmount();
+        hook4.unmount();
+        hook5.unmount();
+
+        expect(booleanStateListeners.size).toBe(0);
+    });
+    test('should remove the state from booleanStateListeners after unmounting hooks created with useWatchBoolean', () => {
+        const hook1 = renderHook(() => useWatchBoolean(generateUniqueName()));
+        const hook2 = renderHook(() => useWatchBoolean(generateUniqueName()));
+        const hook3 = renderHook(() => useWatchBoolean(generateUniqueName()));
+        const hook4 = renderHook(() => useWatchBoolean(generateUniqueName()));
+        const hook5 = renderHook(() => useWatchBoolean(generateUniqueName()));
+
+        expect(booleanStateListeners.size).toBe(5);
+
+        hook1.unmount();
+
+        expect(booleanStateListeners.size).toBe(4);
+
+        hook2.unmount();
+        hook3.unmount();
+        hook4.unmount();
+        hook5.unmount();
+
+        expect(booleanStateListeners.size).toBe(0);
     });
 });
 
@@ -179,6 +229,35 @@ describe('useGlobalBoolean', () => {
         );
 
         consoleErrorMock.mockRestore();
+    });
+    test('should return default state for non-registered boolean name', () => {
+        const { result } = renderHook(() => {
+            const { watchBoolean } = useGlobalBoolean();
+
+            return watchBoolean(name);
+        });
+
+        expect(result.current).toEqual([false, null]);
+    });
+    test('should return default state for registered boolean name with no initial values', () => {
+        const { result } = renderHook(() => {
+            useRegisterBoolean(name);
+            const { watchBoolean } = useGlobalBoolean();
+
+            return watchBoolean(name);
+        });
+
+        expect(result.current).toEqual([false, null]);
+    });
+    test('should return initial state for registered boolean name with initial values', () => {
+        const { result } = renderHook(() => {
+            useRegisterBoolean(name, false, { test: 'test' });
+            const { watchBoolean } = useGlobalBoolean();
+
+            return watchBoolean(name);
+        });
+
+        expect(result.current).toEqual([false, { test: 'test' }]);
     });
 });
 

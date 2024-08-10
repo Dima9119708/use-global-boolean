@@ -1,10 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { errorMessages } from '../errorMessages.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
 import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
+import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
 import type { BooleanNames } from '../types/types.ts';
 
 export const useRegisterBoolean = <Data = unknown>(
@@ -21,8 +22,6 @@ export const useRegisterBoolean = <Data = unknown>(
         setData: Dispatch<SetStateAction<Data>>;
     },
 ] => {
-    const initial = useRef(false);
-
     const [boolean, setBoolean] = useState(initialBoolean);
     const [data, setData] = useState<Data>(initialData);
 
@@ -44,37 +43,32 @@ export const useRegisterBoolean = <Data = unknown>(
         });
     }, [defaultValues, onFalse, onToggle, onTrue, uniqueName]);
 
-    if (!initial.current) {
-        if (booleanStateManager.has(uniqueName)) {
-            console.error(errorMessages.alreadyRegisteredName(uniqueName));
-        }
-
-        registerGlobalBooleanState();
-
-        initial.current = true;
-    }
-
     useEffect(() => {
-        // For strict mode
         if (!booleanStateManager.has(uniqueName)) {
             registerGlobalBooleanState();
+        } else {
+            console.error(errorMessages.alreadyRegisteredName(uniqueName));
         }
 
         return () => {
             booleanStateManager.delete(uniqueName);
         };
-    }, []);
+    }, [registerGlobalBooleanState, uniqueName]);
 
     useEffect(() => {
-        if (booleanStateListeners.has(uniqueName)) {
-            booleanStateManager.set(
-                uniqueName,
-                Object.assign(booleanStateManager.get(uniqueName)!, {
-                    booleanAndData: [boolean, data],
-                }),
-            );
+        const currentBooleanAndData = [boolean, data];
 
-            booleanStateListeners.get(uniqueName)!.forEach((listener) => listener(boolean));
+        booleanStateManager.set(
+            uniqueName,
+            Object.assign(booleanStateManager.get(uniqueName)!, {
+                booleanAndData: currentBooleanAndData,
+            }),
+        );
+
+        if (booleanStateListeners.has(uniqueName)) {
+            booleanStateListeners.get(uniqueName)!.forEach((listener) => listener());
+        } else {
+            forcedCallListener.set(uniqueName, (listener) => listener());
         }
     }, [uniqueName, boolean, data]);
 
