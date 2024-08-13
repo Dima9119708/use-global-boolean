@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
-import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from '../lib';
+import { useBooleanController, useGlobalBoolean, useWatchBoolean } from '../lib';
 import { errorMessages } from '../lib/errorMessages.ts';
 import { booleanStateListeners } from '../lib/globalStates/booleanStateListeners';
 import { booleanStateManager } from '../lib/globalStates/booleanStateManager';
@@ -15,7 +15,7 @@ beforeEach(() => {
 
 describe('booleanStateManager', () => {
     test('should remove the state from booleanStateManager after unmount', () => {
-        const { unmount } = renderHook(() => useRegisterBoolean(name));
+        const { unmount } = renderHook(() => useBooleanController(name));
 
         unmount();
 
@@ -77,7 +77,7 @@ describe('booleanStateListeners', () => {
 
 describe('useRegisterBoolean', () => {
     test('Should check the default state values', () => {
-        const { result } = renderHook(() => useRegisterBoolean(name));
+        const { result } = renderHook(() => useBooleanController(name));
 
         expect(result.current).toEqual([
             false,
@@ -93,7 +93,7 @@ describe('useRegisterBoolean', () => {
     test('Should check initial state with initialBoolean = true and default parameters', () => {
         const initialData = { test: 'test' };
 
-        const { result } = renderHook(() => useRegisterBoolean(name, true, initialData));
+        const { result } = renderHook(() => useBooleanController(name, true, initialData));
 
         expect(result.current).toEqual([
             true,
@@ -107,7 +107,7 @@ describe('useRegisterBoolean', () => {
         ]);
     });
     test('Should change state from false to true using the onTrue method', () => {
-        const { result } = renderHook(() => useRegisterBoolean(name));
+        const { result } = renderHook(() => useBooleanController(name));
 
         act(() => {
             result.current[1].onTrue();
@@ -116,7 +116,7 @@ describe('useRegisterBoolean', () => {
         expect(result.current[0]).toEqual(true);
     });
     test('Should change state from true to false using the onToggle method', () => {
-        const { result } = renderHook(() => useRegisterBoolean(name, true));
+        const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
             result.current[1].onToggle();
@@ -125,7 +125,7 @@ describe('useRegisterBoolean', () => {
         expect(result.current[0]).toEqual(false);
     });
     test('Should change state from true to false using the onFalse method', () => {
-        const { result } = renderHook(() => useRegisterBoolean(name, true));
+        const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
             result.current[1].onToggle();
@@ -134,7 +134,7 @@ describe('useRegisterBoolean', () => {
         expect(result.current[0]).toEqual(false);
     });
     test('Should toggle state between true and false', () => {
-        const { result } = renderHook(() => useRegisterBoolean(name, true));
+        const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
             result.current[1].onToggle();
@@ -151,8 +151,8 @@ describe('useRegisterBoolean', () => {
     test('should log an error when registering the same boolean name multiple times', () => {
         const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
 
-        renderHook(() => useRegisterBoolean(name));
-        renderHook(() => useRegisterBoolean(name));
+        renderHook(() => useBooleanController(name));
+        renderHook(() => useBooleanController(name));
 
         expect(consoleErrorMock).toHaveBeenCalledWith(
             expect.stringContaining(errorMessages.alreadyRegisteredName(name)),
@@ -164,7 +164,7 @@ describe('useRegisterBoolean', () => {
 
 describe('useGlobalBoolean', () => {
     test('Should set boolean to true using onTrue method', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name));
+        const registerBoolean = renderHook(() => useBooleanController(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
@@ -174,7 +174,7 @@ describe('useGlobalBoolean', () => {
         expect(registerBoolean.result.current[0]).toEqual(true);
     });
     test('Should toggle boolean state to true using onToggle method', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name));
+        const registerBoolean = renderHook(() => useBooleanController(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
@@ -184,7 +184,7 @@ describe('useGlobalBoolean', () => {
         expect(registerBoolean.result.current[0]).toEqual(true);
     });
     test('Should set boolean to false using onFalse method when initial value is true', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name, true));
+        const registerBoolean = renderHook(() => useBooleanController(name, true));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
@@ -194,7 +194,7 @@ describe('useGlobalBoolean', () => {
         expect(registerBoolean.result.current[0]).toEqual(false);
     });
     test('Should set boolean to true and update data using onTrue method', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name));
+        const registerBoolean = renderHook(() => useBooleanController(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
@@ -205,7 +205,7 @@ describe('useGlobalBoolean', () => {
         expect(registerBoolean.result.current[1].data).toEqual({ test: 'test' });
     });
     test('Should toggle boolean state to true and update data using onToggle method', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name));
+        const registerBoolean = renderHook(() => useBooleanController(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
@@ -241,7 +241,7 @@ describe('useGlobalBoolean', () => {
     });
     test('should return default state for registered boolean name with no initial values', () => {
         const { result } = renderHook(() => {
-            useRegisterBoolean(name);
+            useBooleanController(name);
             const { watchBoolean } = useGlobalBoolean();
 
             return watchBoolean(name);
@@ -251,7 +251,7 @@ describe('useGlobalBoolean', () => {
     });
     test('should return initial state for registered boolean name with initial values', () => {
         const { result } = renderHook(() => {
-            useRegisterBoolean(name, false, { test: 'test' });
+            useBooleanController(name, false, { test: 'test' });
             const { watchBoolean } = useGlobalBoolean();
 
             return watchBoolean(name);
@@ -263,7 +263,7 @@ describe('useGlobalBoolean', () => {
 
 describe('useWatchBoolean', () => {
     test('should initialize the boolean state to false and data to null', () => {
-        renderHook(() => useRegisterBoolean(name));
+        renderHook(() => useBooleanController(name));
 
         const watchBoolean = renderHook(() => useWatchBoolean(name));
 
@@ -276,14 +276,14 @@ describe('useWatchBoolean', () => {
 
         const watchBoolean = renderHook(() => useWatchBoolean(name));
 
-        renderHook(() => useRegisterBoolean(name, true, initialData));
+        renderHook(() => useBooleanController(name, true, initialData));
 
         expect(watchBoolean.result.current).toEqual([true, initialData]);
     });
     test('should retain registered boolean state and initial data even when onTrue is called without new data', () => {
         const initialData = { test: 'test' };
 
-        renderHook(() => useRegisterBoolean(name, true, initialData));
+        renderHook(() => useBooleanController(name, true, initialData));
         const watchBoolean = renderHook(() => useWatchBoolean(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
@@ -296,7 +296,7 @@ describe('useWatchBoolean', () => {
     test('should retain registered boolean state and initial data even when onToggle is called without new data', () => {
         const initialData = { test: 'test' };
 
-        renderHook(() => useRegisterBoolean(name, true, initialData));
+        renderHook(() => useBooleanController(name, true, initialData));
         const watchBoolean = renderHook(() => useWatchBoolean(name));
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
@@ -309,7 +309,7 @@ describe('useWatchBoolean', () => {
     test('should update the boolean state to false when onFalse is called', () => {
         const watchBoolean = renderHook(() => useWatchBoolean(name));
 
-        const registerBoolean = renderHook(() => useRegisterBoolean(name, true));
+        const registerBoolean = renderHook(() => useBooleanController(name, true));
 
         act(() => {
             registerBoolean.result.current[1].onToggle();
@@ -331,7 +331,7 @@ describe('useWatchBoolean', () => {
         expect(booleanStateListeners.get(name)!.size).toBe(6);
     });
     test('should update all watchers when the boolean state is changed', () => {
-        const registerBoolean = renderHook(() => useRegisterBoolean(name));
+        const registerBoolean = renderHook(() => useBooleanController(name));
 
         const watchBoolean = renderHook(() => ({
             watch1: useWatchBoolean(name),
@@ -358,7 +358,7 @@ describe('useWatchBoolean', () => {
     test('should update all watchers with the new data when boolean state is changed and data is set', () => {
         const data = { test: 'test' };
 
-        const registerBoolean = renderHook(() => useRegisterBoolean<typeof data>(name));
+        const registerBoolean = renderHook(() => useBooleanController<typeof data>(name));
 
         const watchBoolean = renderHook(() => ({
             watch1: useWatchBoolean(name),

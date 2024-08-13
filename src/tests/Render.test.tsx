@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
-import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from '../lib';
+import { BooleanController, useBooleanController, useGlobalBoolean, useWatchBoolean } from '../lib';
+import { forcedCallListener } from '../lib/globalStates/forcedCallListener.ts';
 
 let uniqueName: string;
 
@@ -14,7 +15,7 @@ beforeEach(() => {
 describe('Boolean State Management in Components', () => {
     test('should update aria-modal attribute of dialog after onTrue is called', () => {
         const Dialog = () => {
-            const [open] = useRegisterBoolean(uniqueName);
+            const [open] = useBooleanController(uniqueName);
 
             return <div role="dialog" aria-modal={open} />;
         };
@@ -40,7 +41,7 @@ describe('Boolean State Management in Components', () => {
     });
     test('should update dialog content after onTrue is called with data', () => {
         const Dialog = () => {
-            const [open, { data }] = useRegisterBoolean<{ title: string; subtitle: string }>(
+            const [open, { data }] = useBooleanController<{ title: string; subtitle: string }>(
                 uniqueName,
                 false,
             );
@@ -113,7 +114,7 @@ describe('Boolean State Management in Components', () => {
         };
 
         const RegisterComponent = () => {
-            useRegisterBoolean(uniqueName, true, { initial: { name: 'test' } });
+            useBooleanController(uniqueName, true, { initial: { name: 'test' } });
 
             return null;
         };
@@ -160,7 +161,7 @@ describe('Boolean State Management in Components', () => {
         };
 
         const RegisterComponent = () => {
-            useRegisterBoolean(uniqueName, true, { initial: { name: 'test' } });
+            useBooleanController(uniqueName, true, { initial: { name: 'test' } });
 
             return null;
         };
@@ -207,7 +208,7 @@ describe('Boolean State Management in Components', () => {
         };
 
         const RegisterComponent = () => {
-            useRegisterBoolean(uniqueName, true, { initial: { name: 'test' } });
+            useBooleanController(uniqueName, true, { initial: { name: 'test' } });
 
             return null;
         };
@@ -226,5 +227,250 @@ describe('Boolean State Management in Components', () => {
 
         expect(countRerenderWatchComponentAsHook).toBe(2);
         expect(countRerenderWatchComponentAsFunction).toBe(2);
+    });
+
+    test('should keep forcedCallListener size at 0 when useWatchBoolean is rendered before useRegisterBoolean', () => {
+        const WatchComponentAsHook = () => {
+            useWatchBoolean(uniqueName);
+            return null;
+        };
+
+        const WatchComponentAsFunction = () => {
+            const { watchBoolean } = useGlobalBoolean();
+            watchBoolean(uniqueName);
+            return null;
+        };
+
+        const RegisterComponent = () => {
+            useBooleanController(uniqueName, true, { initial: { name: 'test' } });
+
+            return null;
+        };
+
+        const TestComponent = () => {
+            return (
+                <>
+                    <WatchComponentAsHook />
+                    <WatchComponentAsFunction />
+                    <RegisterComponent />
+                </>
+            );
+        };
+
+        render(<TestComponent />);
+
+        expect(forcedCallListener.size).toBe(0);
+    });
+    test('should update forcedCallListener size correctly when WatchComponent is rendered after RegisterComponent with useWatchBoolean without initial values', () => {
+        const WatchComponentAsHook = () => {
+            useWatchBoolean(uniqueName);
+            return null;
+        };
+
+        const WatchComponentAsFunction = () => {
+            const { watchBoolean } = useGlobalBoolean();
+            watchBoolean(uniqueName);
+            return null;
+        };
+
+        const RegisterComponent = () => {
+            useBooleanController(uniqueName, true, { initial: { name: 'test' } });
+
+            return null;
+        };
+
+        const TestComponent = () => {
+            return (
+                <>
+                    <RegisterComponent />
+                    <WatchComponentAsHook />
+                    <WatchComponentAsFunction />
+                </>
+            );
+        };
+
+        const { unmount } = render(<TestComponent />);
+
+        expect(forcedCallListener.size).toBe(1);
+
+        unmount();
+
+        expect(forcedCallListener.size).toBe(0);
+    });
+    test('should track render counts correctly and update component states based on prop changes and interactions', () => {
+        const inputData = 'test';
+        let countRender1 = 0;
+        let countRender2 = 0;
+
+        const TestComponent = (props: {
+            initialBooleanWatch?: boolean;
+            initialDataWatch?: string;
+        }) => {
+            const { initialDataWatch, initialBooleanWatch } = props;
+
+            return (
+                <>
+                    <BooleanController>
+                        {(props) => {
+                            const [show, data] = props.globalState.watchBoolean(
+                                uniqueName,
+                                initialBooleanWatch,
+                                initialDataWatch,
+                            );
+
+                            ++countRender1;
+
+                            return show && <div data-testid="input">{data}</div>;
+                        }}
+                    </BooleanController>
+
+                    <BooleanController name={uniqueName}>
+                        {(props) => {
+                            const [checked, { onTrue, setData }] = props.localState;
+
+                            ++countRender2;
+
+                            return (
+                                <div
+                                    data-testid="enabled input"
+                                    style={{ backgroundColor: checked ? 'green' : 'red' }}
+                                    onClick={() => {
+                                        onTrue();
+                                        setData(inputData);
+                                    }}
+                                />
+                            );
+                        }}
+                    </BooleanController>
+                </>
+            );
+        };
+
+        const { getByTestId, queryByTestId, rerender } = render(
+            <TestComponent initialDataWatch="" initialBooleanWatch={false} />,
+        );
+
+        expect(queryByTestId('input')).toBe(null);
+
+        expect(countRender1).toBe(2);
+        expect(countRender2).toBe(1);
+
+        fireEvent.click(getByTestId('enabled input'));
+
+        expect(getByTestId('enabled input').style.backgroundColor).toBe('green');
+
+        const $input = getByTestId('input');
+
+        expect($input).toBeInstanceOf(HTMLDivElement);
+        expect($input.textContent).toBe(inputData);
+
+        expect(countRender1).toBe(3);
+        expect(countRender2).toBe(2);
+
+        countRender1 = 0;
+        countRender2 = 0;
+
+        rerender(<TestComponent initialDataWatch={undefined} initialBooleanWatch={false} />);
+
+        expect(countRender1).toBe(1);
+        expect(countRender2).toBe(1);
+
+        expect($input.textContent).toBe(inputData);
+        expect(getByTestId('enabled input').style.backgroundColor).toBe('green');
+    });
+    test('should update table row background and open dialog with correct data when edit button is clicked, and close dialog on cancel', () => {
+        const dataDialog = { name: 'Anom', age: '19', gender: 'Male' };
+
+        const TestComponent = () => {
+            return (
+                <>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <BooleanController key={`table.row`} name={`table.row`}>
+                                {(props) => {
+                                    const [active, { onTrue }] = props.localState;
+
+                                    return (
+                                        <tr
+                                            data-testid="table-row"
+                                            style={{
+                                                backgroundColor: active ? 'red' : 'transparent',
+                                            }}
+                                        >
+                                            <td>Anom</td>
+                                            <td>19</td>
+                                            <td>Male</td>
+                                            <td
+                                                data-testid="edit-button"
+                                                onClick={() => {
+                                                    onTrue();
+                                                    props.globalState.onTrue('dialog', dataDialog);
+                                                }}
+                                            >
+                                                ✏️
+                                            </td>
+                                        </tr>
+                                    );
+                                }}
+                            </BooleanController>
+                        </tbody>
+                    </table>
+
+                    <BooleanController
+                        name="dialog"
+                        initialData={{ name: '', age: '', gender: '' }}
+                    >
+                        {(props) => {
+                            const [open, { data, onFalse }] = props.localState;
+
+                            return (
+                                <dialog data-testid="dialog" open={open}>
+                                    <form data-testid="dialog-form">
+                                        <input name="name" value={data.name} readOnly />
+                                        <input name="age" value={data.age} readOnly />
+                                        <input name="gender" value={data.gender} readOnly />
+                                        <button
+                                            data-testid="cancel-button"
+                                            type="button"
+                                            onClick={() => onFalse()}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </dialog>
+                            );
+                        }}
+                    </BooleanController>
+                </>
+            );
+        };
+
+        const { getByTestId } = render(<TestComponent />);
+
+        expect(getByTestId('table-row').style.backgroundColor).toBe('transparent');
+
+        fireEvent.click(getByTestId('edit-button'));
+
+        expect(getByTestId('table-row').style.backgroundColor).toBe('red');
+
+        const $form = getByTestId('dialog-form');
+
+        expect((getByTestId('dialog') as HTMLDialogElement).open).toBe(true);
+
+        expect(($form.children[0] as HTMLInputElement).value).toBe(dataDialog.name);
+        expect(($form.children[1] as HTMLInputElement).value).toBe(dataDialog.age);
+        expect(($form.children[2] as HTMLInputElement).value).toBe(dataDialog.gender);
+
+        fireEvent.click(getByTestId('cancel-button'));
+
+        expect((getByTestId('dialog') as HTMLDialogElement).open).toBe(false);
     });
 });

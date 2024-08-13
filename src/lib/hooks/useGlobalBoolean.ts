@@ -5,16 +5,28 @@ import equal from 'fast-deep-equal';
 import { errorMessages } from '../errorMessages.ts';
 import type { Listener } from '../globalStates/booleanStateListeners.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
-import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
+import type {
+    BooleanAndData,
+    BooleanStateManagerValues,
+} from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
 import type { BooleanNames } from '../types/types.ts';
 
-export const useGlobalBoolean = () => {
-    const isSnapshotUpdated = useRef(false);
-    const booleanNamesWithInitialData = useRef<Map<BooleanNames, BooleanAndData>>(new Map());
+export type GlobalBooleanMethods = {
+    onTrue: <Data>(uniqueName: BooleanNames, data?: Data) => void;
+    onFalse: (uniqueName: BooleanNames) => void;
+    onToggle: <Data>(uniqueName: BooleanNames, data?: Data) => void;
+    getFieldState: (uniqueName: BooleanNames) => BooleanStateManagerValues | undefined;
+    watchBoolean: <Data = unknown>(
+        uniqueName: BooleanNames,
+        initialBoolean?: boolean,
+        initialData?: Data,
+    ) => BooleanAndData<Data>;
+};
 
-    const onTrue = useCallback(<Data>(uniqueName: BooleanNames, data: Data = null as Data) => {
+export const globalBooleanActions: Omit<GlobalBooleanMethods, 'watchBoolean'> = {
+    onTrue: (uniqueName: BooleanNames, data = null as unknown) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
@@ -23,19 +35,8 @@ export const useGlobalBoolean = () => {
         } else {
             console.error(errorMessages.notRegisteredName('onTrue', uniqueName));
         }
-    }, []);
-
-    const onFalse = useCallback((uniqueName: BooleanNames) => {
-        const disclosureActions = booleanStateManager.get(uniqueName);
-
-        if (disclosureActions) {
-            disclosureActions.onFalse();
-        } else {
-            console.error(errorMessages.notRegisteredName('onFalse', uniqueName));
-        }
-    }, []);
-
-    const onToggle = useCallback(<Data>(uniqueName: BooleanNames, data: Data = null as Data) => {
+    },
+    onToggle: (uniqueName: BooleanNames, data = null as unknown) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
@@ -44,7 +45,24 @@ export const useGlobalBoolean = () => {
         } else {
             console.error(errorMessages.notRegisteredName('onToggle', uniqueName));
         }
-    }, []);
+    },
+    onFalse: (uniqueName: BooleanNames) => {
+        const disclosureActions = booleanStateManager.get(uniqueName);
+
+        if (disclosureActions) {
+            disclosureActions.onFalse();
+        } else {
+            console.error(errorMessages.notRegisteredName('onFalse', uniqueName));
+        }
+    },
+    getFieldState: (uniqueName: BooleanNames) => {
+        return booleanStateManager.get(uniqueName);
+    },
+};
+
+export const useGlobalBoolean = () => {
+    const isSnapshotUpdated = useRef(false);
+    const booleanNamesWithInitialData = useRef<Map<BooleanNames, BooleanAndData>>(new Map());
 
     const watchBoolean = useCallback(
         <Data = unknown>(
@@ -119,9 +137,10 @@ export const useGlobalBoolean = () => {
     useSyncExternalStore(subscribeToChanges, getSnapshot);
 
     return {
-        onTrue,
-        onFalse,
-        onToggle,
+        onTrue: globalBooleanActions.onTrue,
+        onFalse: globalBooleanActions.onFalse,
+        onToggle: globalBooleanActions.onToggle,
+        getFieldState: globalBooleanActions.getFieldState,
         watchBoolean,
     };
 };

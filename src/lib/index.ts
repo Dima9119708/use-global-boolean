@@ -1,5 +1,6 @@
-export { useWatchBoolean } from './hooks/useWatchBoolean.ts';
-export { useGlobalBoolean } from './hooks/useGlobalBoolean.ts';
-export { useRegisterBoolean } from './hooks/useRegisterBoolean.ts';
+export { useWatchBoolean } from './hooks/useWatchBoolean';
+export { useGlobalBoolean, globalBooleanActions } from './hooks/useGlobalBoolean';
+export { useRegisterBoolean, useBooleanController } from './hooks/useBooleanController.ts';
+export { BooleanController } from './components/ControllerBoolean';
 
-export type { BooleanNames, ListBooleanNames } from './types/types.ts';
+export type { BooleanNames, ListBooleanNames } from './types/types';

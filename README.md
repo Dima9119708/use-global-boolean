@@ -7,7 +7,7 @@
 `useGlobalBoolean` is a hook for managing global boolean variables. 
 It can be used to open modals, sidebars, disable elements on a page, 
 hide elements, and pass any arguments to the `onTrue` function. 
-These arguments are then accessible through the `useRegisterBoolean` hook.
+These arguments are then accessible through the `useBooleanController` hook.
 
 ## 🔧 Installation
 
@@ -21,15 +21,15 @@ npm install use-global-boolean
 
 ## 🔎 Usage
 
-To use this hook, you'll need `useGlobalBoolean` and `useRegisterBoolean`:
+To use this hook, you'll need `useGlobalBoolean` and `useBooleanController`:
 
 ```jsx
 // At the top of your file.
-import { useGlobalBoolean, useRegisterBoolean } from "use-global-boolean";
+import { useGlobalBoolean, useBooleanController } from "use-global-boolean";
 
 // First, register a modal with a unique name.
 const WelcomeModal = () => {
-    const [opened, { onFalse }] = useRegisterBoolean('modal_welcome');
+    const [opened, { onFalse }] = useBooleanController('modal_welcome');
 
     return (
         <dialog open={opened}>
@@ -65,9 +65,43 @@ const App = () => {
 export default App
 ```
 
-## 👀 watchBoolean / useWatchBoolean
+## 🫱🏿🫲🏿 Passing arguments
+In addition to a boolean value, you can also pass data as a second argument, which can be of any type. Data can be passed as the second argument to onTrue and onToggle from useGlobalBoolean, as well as to globalBooleanActions.onTrue() and globalBooleanActions.onToggle()
 ```tsx
-import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from "use-global-boolean";
+import { useGlobalBoolean, useBooleanController } from "use-global-boolean";
+
+const EmailModal = () => {
+    // Register the modal with a unique identifier and initial parameters
+    const [opened, { data, onFalse }] = useBooleanController('email_modal', false, { email: '' });
+
+    return (
+      <dialog open={opened}>
+         <input value={data.email} />
+         <button type="button" onClick={onFalse}>Close</button>
+         <button type="submit">Send email</button>
+      </dialog>
+    )
+}
+
+const Button = () => {
+    const { onTrue } = useGlobalBoolean();
+
+    // Button to open the email modal, passing parameters
+    return <button onClick={() => onTrue('email_modal', { email: 'hello@world.com' })}>Open modal</button>
+}
+
+const App = () => (
+    <>
+        <Button />
+        <EmailModal />
+    </>
+);
+```
+
+## 👀 watchBoolean / useWatchBoolean
+We can break our components into smaller parts and track the changed state in a separate component using watchBoolean from useGlobalBoolean or the useWatchBoolean hook.
+```tsx
+import { useGlobalBoolean, useBooleanController, useWatchBoolean } from "use-global-boolean";
 
 const Form = () => {
     // Using watchBoolean from useGlobalBoolean
@@ -95,7 +129,7 @@ const Form = () => {
 }
 
 const EnableForm = () => {
-    const [checked, { onToogle }] = useRegisterBoolean('enable_form');
+    const [checked, { onToogle }] = useBooleanController('enable_form');
 
     return (
         <label>
@@ -124,37 +158,88 @@ const App = () => {
 export default App
 ```
 
-## 🫱🏿🫲🏿 Passing arguments
+## 🎛️ BooleanController
+If we prefer not to break the component into smaller parts and instead want to write all the logic within a single component, we can ensure that only the parts we want to re-render will be updated. Let's refactor the above example to use BooleanController.
 
 ```tsx
-import { useGlobalBoolean, useRegisterBoolean } from "use-global-boolean";
+import { BooleanController } from "use-global-boolean";
 
-const EmailModal = () => {
-    // Register the modal with a unique identifier and initial parameters
-    const [opened, { data, onFalse }] = useRegisterBoolean('email_modal', false, { email: '' });
+const App = () => {
+    return (
+        <>
+            <BooleanController name="enable_form">
+                {(props) => {
+                    const [checked, { onToggle }] = props.localState;
+                    return (
+                        <label>
+                            <input type="checkbox" checked={checked} onChange={() => onToggle()} />
+                            Enable form
+                        </label>
+                    );
+                }}
+            </BooleanController>
+            <BooleanController>
+                {(props) => {
+                    const [isEnabled] = props.globalState.watchBoolean('enable_form');
+
+                    return (
+                        isEnabled && (
+                            <form>
+                                <label htmlFor="fname">First name:</label>
+                                <br />
+                                <input type="text" id="fname" name="fname" defaultValue="John" />
+                                <br />
+                                <label htmlFor="lname">Last name:</label>
+                                <br />
+                                <input type="text" id="lname" name="lname" defaultValue="Doe" />
+                                <br />
+                                <br />
+                                <input type="submit" value="Submit" />
+                            </form>
+                        )
+                    );
+                }}
+            </BooleanController>
+        </>
+    );
+}
+
+export default App
+```
+
+## 💪🏼 globalBooleanActions
+If we prefer not to break the component into smaller parts and instead want to write all the logic within a single component, we can ensure that only the parts we want to re-render will be updated. Let's refactor the above example to use BooleanController.
+
+```tsx
+import { useEffect } from 'react';
+import { globalBooleanActions } from 'use-global-boolean';
+
+const externalLogic = () => {
+    /* Logic... */
+
+    globalBooleanActions.onTrue('dialog');
+};
+
+const Dialog = () => {
+    const [show] = useBooleanController('dialog');
 
     return (
-      <dialog open={opened}>
-         <input value={data.email} />
-         <button type="button" onClick={onFalse}>Close</button>
-         <button type="submit">Send email</button>
-      </dialog>
-    )
-}
+        <dialog open={show}>
+            <p>This is a modal dialog controlled by external logic.</p>
+        </dialog>
+    );
+};
 
-const ButtonOpenEmailModal = () => {
-    const { onTrue } = useGlobalBoolean();
+const App = () => {
+    useEffect(() => {
+        // Call the external logic after the component is mounted
+        externalLogic();
+    }, []);
 
-    // Button to open the email modal, passing parameters
-    return <button onClick={() => onTrue('email_modal', { email: 'hello@world.com' })}>Open modal</button>
-}
+    return <Dialog />;
+};
 
-const App = () => (
-    <>
-        <ButtonOpenEmailModal />
-        <EmailModal />
-    </>
-);
+export default App;
 ```
 
 ## [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/) TypeScript 
@@ -171,10 +256,10 @@ declare module "use-global-boolean" {
 }
 
 // Modal.tsx
-import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from "use-global-boolean";
+import { useGlobalBoolean, useBooleanController, useWatchBoolean } from "use-global-boolean";
 
 // Now TypeScript will provide suggestions:
-useRegisterBoolean('modal1'); // 'modal1', 'modal2', 'modal3'
+useBooleanController('modal1'); // 'modal1', 'modal2', 'modal3'
 
 const { onTrue, onToggle, watch } = useGlobalBoolean();
 onTrue('modal1'); // 'modal1', 'modal2', 'modal3'

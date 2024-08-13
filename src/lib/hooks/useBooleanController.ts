@@ -1,5 +1,11 @@
-import type { Dispatch, SetStateAction } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    type Dispatch,
+    type SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 
 import { errorMessages } from '../errorMessages.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
@@ -8,11 +14,7 @@ import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
 import type { BooleanNames } from '../types/types.ts';
 
-export const useRegisterBoolean = <Data = unknown>(
-    uniqueName: BooleanNames,
-    initialBoolean: boolean = false,
-    initialData: Data = null as Data,
-): [
+export type UseBooleanControllerReturn<Data> = [
     boolean,
     {
         onTrue: () => void;
@@ -21,7 +23,16 @@ export const useRegisterBoolean = <Data = unknown>(
         data: Data;
         setData: Dispatch<SetStateAction<Data>>;
     },
-] => {
+];
+
+/**
+ * @deprecated Use `useBooleanController` instead. Will be removed in future versions.
+ */
+export const useRegisterBoolean = <Data = unknown>(
+    uniqueName: BooleanNames,
+    initialBoolean: boolean = false,
+    initialData: Data = null as Data,
+): UseBooleanControllerReturn<Data> => {
     const [boolean, setBoolean] = useState(initialBoolean);
     const [data, setData] = useState<Data>(initialData);
 
@@ -47,7 +58,9 @@ export const useRegisterBoolean = <Data = unknown>(
         if (!booleanStateManager.has(uniqueName)) {
             registerGlobalBooleanState();
         } else {
-            console.error(errorMessages.alreadyRegisteredName(uniqueName));
+            if (uniqueName !== '') {
+                console.error(errorMessages.alreadyRegisteredName(uniqueName));
+            }
         }
 
         return () => {
@@ -70,6 +83,10 @@ export const useRegisterBoolean = <Data = unknown>(
         } else {
             forcedCallListener.set(uniqueName, (listener) => listener());
         }
+
+        return () => {
+            forcedCallListener.delete(uniqueName);
+        };
     }, [uniqueName, boolean, data]);
 
     return [
@@ -83,3 +100,5 @@ export const useRegisterBoolean = <Data = unknown>(
         },
     ];
 };
+
+export const useBooleanController = useRegisterBoolean;
