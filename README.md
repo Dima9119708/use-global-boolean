@@ -158,16 +158,16 @@ const App = () => {
 export default App
 ```
 
-## 🎛️ BooleanController
-If we prefer not to break the component into smaller parts and instead want to write all the logic within a single component, we can ensure that only the parts we want to re-render will be updated. Let's refactor the above example to use BooleanController.
+## 🎛️ WatchController
+If we prefer not to break the component into smaller parts and instead want to write all the logic within a single component, we can ensure that only the parts we want to re-render will be updated. Let's refactor the above example to use WatchController.
 
 ```tsx
-import { BooleanController } from "use-global-boolean";
+import { WatchController } from "use-global-boolean";
 
 const App = () => {
     return (
         <>
-            <BooleanController name="enable_form">
+            <WatchController name="enable_form">
                 {(props) => {
                     const [checked, { onToggle }] = props.localState;
                     return (
@@ -177,10 +177,10 @@ const App = () => {
                         </label>
                     );
                 }}
-            </BooleanController>
-            <BooleanController>
+            </WatchController>
+            <WatchController>
                 {(props) => {
-                    const [isEnabled] = props.globalState.watchBoolean('enable_form');
+                    const [isEnabled] = props.globalMethods.watchBoolean('enable_form');
 
                     return (
                         isEnabled && (
@@ -199,7 +199,7 @@ const App = () => {
                         )
                     );
                 }}
-            </BooleanController>
+            </WatchController>
         </>
     );
 }
@@ -208,7 +208,7 @@ export default App
 ```
 
 ## 💪🏼 globalBooleanActions
-If we prefer not to break the component into smaller parts and instead want to write all the logic within a single component, we can ensure that only the parts we want to re-render will be updated. Let's refactor the above example to use BooleanController.
+If you need to change the state outside of a component.
 
 ```tsx
 import { useEffect } from 'react';
