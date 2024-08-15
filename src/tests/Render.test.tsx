@@ -3,7 +3,13 @@ import { useEffect } from 'react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
-import { BooleanController, useBooleanController, useGlobalBoolean, useWatchBoolean } from '../lib';
+import {
+    WatchController,
+    globalBooleanActions,
+    useBooleanController,
+    useGlobalBoolean,
+    useWatchBoolean,
+} from '../lib';
 import { forcedCallListener } from '../lib/globalStates/forcedCallListener.ts';
 
 let uniqueName: string;
@@ -310,9 +316,9 @@ describe('Boolean State Management in Components', () => {
 
             return (
                 <>
-                    <BooleanController>
+                    <WatchController>
                         {(props) => {
-                            const [show, data] = props.globalState.watchBoolean(
+                            const [show, data] = props.globalMethods.watchBoolean(
                                 uniqueName,
                                 initialBooleanWatch,
                                 initialDataWatch,
@@ -322,9 +328,9 @@ describe('Boolean State Management in Components', () => {
 
                             return show && <div data-testid="input">{data}</div>;
                         }}
-                    </BooleanController>
+                    </WatchController>
 
-                    <BooleanController name={uniqueName}>
+                    <WatchController name={uniqueName}>
                         {(props) => {
                             const [checked, { onTrue, setData }] = props.localState;
 
@@ -341,7 +347,7 @@ describe('Boolean State Management in Components', () => {
                                 />
                             );
                         }}
-                    </BooleanController>
+                    </WatchController>
                 </>
             );
         };
@@ -394,7 +400,7 @@ describe('Boolean State Management in Components', () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <BooleanController key={`table.row`} name={`table.row`}>
+                            <WatchController key={`table.row`} name={`table.row`}>
                                 {(props) => {
                                     const [active, { onTrue }] = props.localState;
 
@@ -412,7 +418,10 @@ describe('Boolean State Management in Components', () => {
                                                 data-testid="edit-button"
                                                 onClick={() => {
                                                     onTrue();
-                                                    props.globalState.onTrue('dialog', dataDialog);
+                                                    props.globalMethods.onTrue(
+                                                        'dialog',
+                                                        dataDialog,
+                                                    );
                                                 }}
                                             >
                                                 ✏️
@@ -420,14 +429,11 @@ describe('Boolean State Management in Components', () => {
                                         </tr>
                                     );
                                 }}
-                            </BooleanController>
+                            </WatchController>
                         </tbody>
                     </table>
 
-                    <BooleanController
-                        name="dialog"
-                        initialData={{ name: '', age: '', gender: '' }}
-                    >
+                    <WatchController name="dialog" initialData={{ name: '', age: '', gender: '' }}>
                         {(props) => {
                             const [open, { data, onFalse }] = props.localState;
 
@@ -448,7 +454,7 @@ describe('Boolean State Management in Components', () => {
                                 </dialog>
                             );
                         }}
-                    </BooleanController>
+                    </WatchController>
                 </>
             );
         };
@@ -472,5 +478,50 @@ describe('Boolean State Management in Components', () => {
         fireEvent.click(getByTestId('cancel-button'));
 
         expect((getByTestId('dialog') as HTMLDialogElement).open).toBe(false);
+    });
+    test('render stability should be maintained under multiple state updates in boolean controller', () => {
+        let renderCount = 0;
+
+        const TestComponent = () => {
+            const [checked, { onTrue, data }] = useBooleanController(uniqueName);
+
+            useEffect(() => {
+                ++renderCount;
+            }, [checked, data]);
+
+            return (
+                <>
+                    <button data-testid="button1" onClick={() => onTrue({ test: 'test' })} />
+                    <button
+                        data-testid="button2"
+                        onClick={() => globalBooleanActions.onTrue(uniqueName, { test: 'test' })}
+                    />
+                </>
+            );
+        };
+
+        const { getByTestId } = render(<TestComponent />);
+
+        fireEvent.click(getByTestId('button1'));
+
+        expect(renderCount).toBe(2);
+
+        fireEvent.click(getByTestId('button1'));
+        fireEvent.click(getByTestId('button1'));
+        fireEvent.click(getByTestId('button1'));
+        fireEvent.click(getByTestId('button1'));
+
+        expect(renderCount).toBe(2);
+
+        fireEvent.click(getByTestId('button2'));
+
+        expect(renderCount).toBe(2);
+
+        fireEvent.click(getByTestId('button2'));
+        fireEvent.click(getByTestId('button2'));
+        fireEvent.click(getByTestId('button2'));
+        fireEvent.click(getByTestId('button2'));
+
+        expect(renderCount).toBe(2);
     });
 });

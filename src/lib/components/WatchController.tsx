@@ -10,12 +10,19 @@ interface BooleanControllerProps<Data = unknown> {
     name?: BooleanNames;
     children: FunctionComponent<{
         localState: UseBooleanControllerReturn<Data>;
+        globalMethods: GlobalBooleanMethods;
+        /**
+         * @deprecated Use `globalMethods` instead. Will be removed in future versions.
+         */
         globalState: GlobalBooleanMethods;
     }>;
     initialBoolean?: boolean;
     initialData?: Data;
 }
 
+/**
+ * @deprecated Use `WatchController` instead. Will be renamed in future versions.
+ */
 export const BooleanController = <Data = unknown,>(props: BooleanControllerProps<Data>) => {
     const { name = '', children, initialBoolean, initialData } = props;
 
@@ -24,6 +31,9 @@ export const BooleanController = <Data = unknown,>(props: BooleanControllerProps
 
     return children({
         localState: controllerMethods,
+        globalMethods: globalBooleanMethods,
         globalState: globalBooleanMethods,
     });
 };
+
+export const WatchController = BooleanController;

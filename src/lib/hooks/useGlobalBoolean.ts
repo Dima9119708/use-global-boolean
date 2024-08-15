@@ -11,12 +11,24 @@ import type {
 } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
-import type { BooleanNames } from '../types/types.ts';
+import type { BooleanNames, IsEqual } from '../types/types.ts';
 
 export type GlobalBooleanMethods = {
-    onTrue: <Data>(uniqueName: BooleanNames, data?: Data) => void;
-    onFalse: (uniqueName: BooleanNames) => void;
-    onToggle: <Data>(uniqueName: BooleanNames, data?: Data) => void;
+    onTrue: <Data = unknown>(
+        uniqueName: BooleanNames,
+        data?: Data,
+        isEqual?: IsEqual<Data>,
+    ) => void;
+    onFalse: <Data = unknown>(
+        uniqueName: BooleanNames,
+        data?: Data,
+        isEqual?: IsEqual<Data>,
+    ) => void;
+    onToggle: <Data = unknown>(
+        uniqueName: BooleanNames,
+        data?: Data,
+        isEqual?: IsEqual<Data>,
+    ) => void;
     getFieldState: (uniqueName: BooleanNames) => BooleanStateManagerValues | undefined;
     watchBoolean: <Data = unknown>(
         uniqueName: BooleanNames,
@@ -26,30 +38,49 @@ export type GlobalBooleanMethods = {
 };
 
 export const globalBooleanActions: Omit<GlobalBooleanMethods, 'watchBoolean'> = {
-    onTrue: (uniqueName: BooleanNames, data = null as unknown) => {
+    onTrue: <Data>(uniqueName: BooleanNames, data?: Data, isEqual = equal) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
-            disclosureActions.setData(data ?? disclosureActions.booleanAndData[1]);
+            disclosureActions.setData(
+                data === undefined
+                    ? disclosureActions.booleanAndData[1]
+                    : isEqual(data, disclosureActions.booleanAndData[1])
+                      ? disclosureActions.booleanAndData[1]
+                      : data,
+            );
             disclosureActions.onTrue();
         } else {
             console.error(errorMessages.notRegisteredName('onTrue', uniqueName));
         }
     },
-    onToggle: (uniqueName: BooleanNames, data = null as unknown) => {
+    onToggle: <Data>(uniqueName: BooleanNames, data?: Data, isEqual = equal) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
-            disclosureActions.setData(data ?? disclosureActions.booleanAndData[1]);
+            disclosureActions.setData(
+                data === undefined
+                    ? disclosureActions.booleanAndData[1]
+                    : isEqual(data, disclosureActions.booleanAndData[1])
+                      ? disclosureActions.booleanAndData[1]
+                      : data,
+            );
             disclosureActions.onToggle();
         } else {
             console.error(errorMessages.notRegisteredName('onToggle', uniqueName));
         }
     },
-    onFalse: (uniqueName: BooleanNames) => {
+    onFalse: <Data>(uniqueName: BooleanNames, data?: Data, isEqual = equal) => {
         const disclosureActions = booleanStateManager.get(uniqueName);
 
         if (disclosureActions) {
+            disclosureActions.setData(
+                data === undefined
+                    ? disclosureActions.booleanAndData[1]
+                    : isEqual(data, disclosureActions.booleanAndData[1])
+                      ? disclosureActions.booleanAndData[1]
+                      : data,
+            );
             disclosureActions.onFalse();
         } else {
             console.error(errorMessages.notRegisteredName('onFalse', uniqueName));

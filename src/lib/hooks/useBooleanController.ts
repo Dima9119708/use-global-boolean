@@ -7,19 +7,21 @@ import {
     useState,
 } from 'react';
 
+import equal from 'fast-deep-equal';
+
 import { errorMessages } from '../errorMessages.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
 import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
-import type { BooleanNames } from '../types/types.ts';
+import type { BooleanNames, IsEqual } from '../types/types.ts';
 
 export type UseBooleanControllerReturn<Data> = [
     boolean,
     {
-        onTrue: () => void;
-        onFalse: () => void;
-        onToggle: () => void;
+        onTrue: (newData?: Data, isEqual?: IsEqual<Data>) => void;
+        onFalse: (newData?: Data, isEqual?: IsEqual<Data>) => void;
+        onToggle: (newData?: Data, isEqual?: IsEqual<Data>) => void;
         data: Data;
         setData: Dispatch<SetStateAction<Data>>;
     },
@@ -38,11 +40,35 @@ export const useRegisterBoolean = <Data = unknown>(
 
     const defaultValues = useMemo(() => [initialBoolean, initialData] as BooleanAndData<Data>, []);
 
-    const onTrue = useCallback(() => setBoolean(true), []);
+    const onTrue = useCallback((newData?: Data, isEqual = equal) => {
+        setBoolean(true);
 
-    const onFalse = useCallback(() => setBoolean(false), []);
+        if (newData !== undefined) {
+            setData((prevState) => {
+                return isEqual(newData, prevState) ? prevState : newData;
+            });
+        }
+    }, []);
 
-    const onToggle = useCallback(() => setBoolean((prev) => !prev), []);
+    const onFalse = useCallback((newData?: Data, isEqual = equal) => {
+        setBoolean(false);
+
+        if (newData !== undefined) {
+            setData((prevState) => {
+                return isEqual(newData, prevState) ? prevState : newData;
+            });
+        }
+    }, []);
+
+    const onToggle = useCallback((newData?: Data, isEqual = equal) => {
+        setBoolean((prev) => !prev);
+
+        if (newData !== undefined) {
+            setData((prevState) => {
+                return isEqual(newData, prevState) ? prevState : newData;
+            });
+        }
+    }, []);
 
     const registerGlobalBooleanState = useCallback(() => {
         booleanStateManager.set(uniqueName, {
