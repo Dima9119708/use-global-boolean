@@ -85,6 +85,9 @@ describe('useRegisterBoolean', () => {
                 onTrue: result.current[1].onTrue,
                 onFalse: result.current[1].onFalse,
                 onToggle: result.current[1].onToggle,
+                setTrue: result.current[1].setTrue,
+                setFalse: result.current[1].setFalse,
+                toggle: result.current[1].toggle,
                 setData: result.current[1].setData,
                 data: null,
             },
@@ -101,6 +104,9 @@ describe('useRegisterBoolean', () => {
                 onTrue: result.current[1].onTrue,
                 onFalse: result.current[1].onFalse,
                 onToggle: result.current[1].onToggle,
+                setTrue: result.current[1].setTrue,
+                setFalse: result.current[1].setFalse,
+                toggle: result.current[1].toggle,
                 setData: result.current[1].setData,
                 data: initialData,
             },
@@ -110,7 +116,7 @@ describe('useRegisterBoolean', () => {
         const { result } = renderHook(() => useBooleanController(name));
 
         act(() => {
-            result.current[1].onTrue();
+            result.current[1].setTrue();
         });
 
         expect(result.current[0]).toEqual(true);
@@ -119,7 +125,7 @@ describe('useRegisterBoolean', () => {
         const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
-            result.current[1].onToggle();
+            result.current[1].toggle();
         });
 
         expect(result.current[0]).toEqual(false);
@@ -128,7 +134,7 @@ describe('useRegisterBoolean', () => {
         const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
-            result.current[1].onToggle();
+            result.current[1].toggle();
         });
 
         expect(result.current[0]).toEqual(false);
@@ -137,13 +143,13 @@ describe('useRegisterBoolean', () => {
         const { result } = renderHook(() => useBooleanController(name, true));
 
         act(() => {
-            result.current[1].onToggle();
+            result.current[1].toggle();
         });
 
         expect(result.current[0]).toEqual(false);
 
         act(() => {
-            result.current[1].onToggle();
+            result.current[1].toggle();
         });
 
         expect(result.current[0]).toEqual(true);
@@ -168,7 +174,7 @@ describe('useGlobalBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onTrue(name);
+            globalBoolean.result.current.setTrue(name);
         });
 
         expect(registerBoolean.result.current[0]).toEqual(true);
@@ -178,7 +184,7 @@ describe('useGlobalBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onToggle(name);
+            globalBoolean.result.current.toggle(name);
         });
 
         expect(registerBoolean.result.current[0]).toEqual(true);
@@ -188,7 +194,7 @@ describe('useGlobalBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onFalse(name);
+            globalBoolean.result.current.setFalse(name);
         });
 
         expect(registerBoolean.result.current[0]).toEqual(false);
@@ -198,7 +204,7 @@ describe('useGlobalBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onTrue(name, { test: 'test' });
+            globalBoolean.result.current.setTrue(name, { test: 'test' });
         });
 
         expect(registerBoolean.result.current[0]).toEqual(true);
@@ -209,7 +215,7 @@ describe('useGlobalBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onToggle(name, { test: 'test' });
+            globalBoolean.result.current.toggle(name, { test: 'test' });
         });
 
         expect(registerBoolean.result.current[0]).toEqual(true);
@@ -221,11 +227,11 @@ describe('useGlobalBoolean', () => {
         const { result } = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            result.current.onTrue(name);
+            result.current.setTrue(name);
         });
 
         expect(consoleErrorMock).toHaveBeenCalledWith(
-            expect.stringContaining(errorMessages.notRegisteredName('onTrue', name)),
+            expect.stringContaining(errorMessages.notRegisteredName('setTrue', name)),
         );
 
         consoleErrorMock.mockRestore();
@@ -259,6 +265,70 @@ describe('useGlobalBoolean', () => {
 
         expect(result.current).toEqual([false, { test: 'test' }]);
     });
+    test('should correctly update data when toggling boolean states', () => {
+        const controller = renderHook(() => useBooleanController(name, false, 0));
+
+        const globalMethods = renderHook(() => useGlobalBoolean());
+
+        expect(controller.result.current[1].data).toEqual(0);
+
+        act(() => {
+            globalMethods.result.current.setTrue<number>(name, (prevData) => prevData + 1);
+        });
+
+        act(() => {
+            globalMethods.result.current.toggle<number>(name, (prevData) => prevData + 1);
+        });
+
+        act(() => {
+            globalMethods.result.current.setFalse<number>(name, (prevData) => prevData + 1);
+        });
+
+        expect(controller.result.current[1].data).toEqual(3);
+
+        act(() => {
+            globalMethods.result.current.setTrue<number>(name, 1);
+        });
+
+        expect(controller.result.current[1].data).toEqual(1);
+
+        act(() => {
+            globalMethods.result.current.toggle<number>(name, 2);
+        });
+
+        expect(controller.result.current[1].data).toEqual(2);
+
+        act(() => {
+            globalMethods.result.current.setFalse<number>(name, 3);
+        });
+
+        expect(controller.result.current[1].data).toEqual(3);
+    });
+    test('should return correct field state boolean and data values after update', () => {
+        renderHook(() => useBooleanController(name, false, 0));
+
+        const globalMethods = renderHook(() => useGlobalBoolean());
+
+        act(() => {
+            globalMethods.result.current.setTrue<number>(name, 1);
+        });
+
+        expect(globalMethods.result.current.getFieldState(name)).toEqual(
+            expect.objectContaining({
+                setTrue: expect.any(Function),
+                setFalse: expect.any(Function),
+                toggle: expect.any(Function),
+                booleanAndData: [true, 1],
+                onTrue: expect.any(Function),
+                onFalse: expect.any(Function),
+                onToggle: expect.any(Function),
+                setData: expect.any(Function),
+            }),
+        );
+
+        expect(globalMethods.result.current.getFieldStateBoolean(name)).toBe(true);
+        expect(globalMethods.result.current.getFieldStateData(name)).toBe(1);
+    });
 });
 
 describe('useWatchBoolean', () => {
@@ -288,7 +358,7 @@ describe('useWatchBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onTrue(name);
+            globalBoolean.result.current.setTrue(name);
         });
 
         expect(watchBoolean.result.current).toEqual([true, initialData]);
@@ -301,7 +371,7 @@ describe('useWatchBoolean', () => {
         const globalBoolean = renderHook(() => useGlobalBoolean());
 
         act(() => {
-            globalBoolean.result.current.onTrue(name);
+            globalBoolean.result.current.setTrue(name);
         });
 
         expect(watchBoolean.result.current).toEqual([true, initialData]);
@@ -312,7 +382,7 @@ describe('useWatchBoolean', () => {
         const registerBoolean = renderHook(() => useBooleanController(name, true));
 
         act(() => {
-            registerBoolean.result.current[1].onToggle();
+            registerBoolean.result.current[1].toggle();
         });
 
         expect(watchBoolean.result.current).toEqual([false, null]);
@@ -343,7 +413,7 @@ describe('useWatchBoolean', () => {
         }));
 
         act(() => {
-            registerBoolean.result.current[1].onTrue();
+            registerBoolean.result.current[1].setTrue();
         });
 
         expect(watchBoolean.result.current).toEqual({
@@ -370,7 +440,7 @@ describe('useWatchBoolean', () => {
         }));
 
         act(() => {
-            registerBoolean.result.current[1].onTrue();
+            registerBoolean.result.current[1].setTrue();
             registerBoolean.result.current[1].setData(data);
         });
 

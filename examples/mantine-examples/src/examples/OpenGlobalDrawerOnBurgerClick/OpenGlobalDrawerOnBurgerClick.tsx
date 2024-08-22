@@ -1,16 +1,16 @@
 import { Box, Burger, Drawer, Group } from '@mantine/core';
 import { MantineLogo } from '@mantinex/mantine-logo';
-import { useGlobalBoolean, useRegisterBoolean, useWatchBoolean } from 'use-global-boolean';
+import { useBooleanController, useGlobalBoolean, useWatchBoolean } from 'use-global-boolean';
 
 import classes from './OpenGlobalDrawerOnBurgerClick.module.css';
 
 const MantineDrawer = () => {
-    const [opened, { onFalse }] = useRegisterBoolean('drawer', false);
+    const [opened, { setFalse }] = useBooleanController('drawer', false);
 
     return (
         <Drawer
             opened={opened}
-            onClose={onFalse}
+            onClose={setFalse}
             padding="md"
             title="Navigation"
             zIndex={1000000}
@@ -19,11 +19,11 @@ const MantineDrawer = () => {
 };
 
 const MantineBurger = () => {
-    const { onTrue } = useGlobalBoolean();
+    const { setTrue } = useGlobalBoolean();
 
     const [opened] = useWatchBoolean('drawer');
 
-    return <Burger opened={opened} onClick={() => onTrue('drawer')} />;
+    return <Burger opened={opened} onClick={() => setTrue('drawer')} />;
 };
 
 export default function OpenGlobalDrawerOnBurgerClick() {

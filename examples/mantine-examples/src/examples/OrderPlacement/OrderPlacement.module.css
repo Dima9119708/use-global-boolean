@@ -1,0 +1,201 @@
+.box_base {
+    background-color: #f8f7f5;
+    padding: var(--mantine-spacing-sm);
+    border-radius: var(--mantine-radius-md);
+    margin-bottom: var(--mantine-spacing-md);
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.title_xl {
+    font-size: 16px;
+    color: var(--mantine-color-black);
+}
+
+.title_xl_1 {
+    font-size: 28px;
+    color: var(--mantine-color-black);
+    font-weight: bold;
+}
+
+.title_sm {
+    font-size: 20px;
+    color: var(--mantine-color-black);
+}
+
+.title_xs {
+    font-size: 13px;
+    color: var(--mantine-color-black);
+}
+
+.text {
+    font-size: 11px;
+    color: #8a8784;
+    line-height: 1;
+}
+
+.box__active {
+    box-shadow: 0 0 0 2px rgba(33, 32, 31, .92), 0 2px 5px rgba(0, 0, 0, .1);
+}
+
+.box__not_active {
+    box-shadow: 0 0 0 2px rgba(33,32,31,.05),0 2px 5px rgba(0, 0, 0,.1);
+}
+
+.box__delivery_type_selector_global {
+    height: 108px;
+    width: 150px;
+    cursor: pointer;
+    padding: var(--mantine-spacing-xs);
+    background-color: var(--mantine-color-white);
+    border-radius: var(--mantine-radius-md);
+
+    & .inner {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    & .courier_subtitle {
+        font-weight: 500;
+        font-size: 11px;
+        line-height: 1;
+        color: var(--mantine-color-black);
+    }
+}
+
+
+.delivery_notification {
+    flex: 1;
+    color: var(--mantine-color-blue-9);
+    border-radius: var(--mantine-radius-md);
+    cursor: pointer;
+}
+
+.delivery_date_intervals {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--mantine-spacing-sm);
+    padding: var(--mantine-spacing-xs);
+    margin-top: 25px;
+
+    & .box {
+        color: #8a8784;
+        background-color: white;
+        padding: var(--mantine-spacing-xs);
+        text-align: center;
+        border-radius: var(--mantine-radius-md);
+        min-width: 104px;
+        cursor: pointer;
+    }
+
+    & .time {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--mantine-color-black);
+    }
+    & .priceFrom {
+        font-size: 11px;
+        color: #8a8784;
+    }
+}
+
+.delivery_time_intervals {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--mantine-spacing-sm);
+    padding: var(--mantine-spacing-xs);
+
+    & .box {
+        color: #8a8784;
+        background-color: white;
+        padding: var(--mantine-spacing-xs);
+        text-align: center;
+        border-radius: var(--mantine-radius-md);
+        min-width: 104px;
+        cursor: pointer;
+    }
+
+    & .box_on_demand {
+        position: relative;
+        min-width: 225px;
+
+        & .inner {
+            display: flex;
+            align-items: center;
+            gap: 0 5px;
+        }
+
+        & .icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+        }
+    }
+
+    & .time {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--mantine-color-black);
+    }
+    & .priceFrom {
+        font-size: 11px;
+        color: #8a8784;
+    }
+}
+
+.checkout_summary_box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f7f5;
+    border-radius: var(--mantine-radius-md);
+    padding: var(--mantine-spacing-sm);
+    margin-bottom: var(--mantine-spacing-md);
+}
+
+.payment_methods {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    & .text {
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--mantine-color-indigo-6);
+    }
+
+    &.add_card {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        cursor: pointer;
+        border-radius: var(--mantine-radius-md);
+        width: 120px;
+        background-color: #f8f7f5;
+        padding: var(--mantine-spacing-sm);
+        margin-bottom: var(--mantine-spacing-lg);
+
+        & .text {
+            text-align: center;
+            font-size: 11px;
+            color: var(--mantine-color-black);
+        }
+    }
+}
+
+.bank_widget {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f8f7f5;
+    cursor: pointer;
+    border-radius: var(--mantine-radius-md);
+    padding: var(--mantine-spacing-sm);
+    margin-bottom: var(--mantine-spacing-md);
+}

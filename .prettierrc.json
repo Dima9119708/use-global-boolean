@@ -16,7 +16,7 @@
   "bracketSpacing": true,
   "editorconfig": true,
   "jsxSingleQuote": false,
-  "printWidth": 100,
+  "printWidth": 150,
   "tabWidth": 4,
   "trailingComma": "all"
 }

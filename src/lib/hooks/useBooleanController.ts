@@ -1,11 +1,4 @@
-import {
-    type Dispatch,
-    type SetStateAction,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import equal from 'fast-deep-equal';
 
@@ -14,14 +7,28 @@ import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts'
 import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';
 import { forcedCallListener } from '../globalStates/forcedCallListener.ts';
-import type { BooleanNames, IsEqual } from '../types/types.ts';
+import type { BooleanNames, IsEqual, NewDataOrCallback } from '../types/types.ts';
 
-export type UseBooleanControllerReturn<Data> = [
+export type UseBooleanControllerReturn<Data = unknown> = [
     boolean,
     {
-        onTrue: (newData?: Data, isEqual?: IsEqual<Data>) => void;
-        onFalse: (newData?: Data, isEqual?: IsEqual<Data>) => void;
-        onToggle: (newData?: Data, isEqual?: IsEqual<Data>) => void;
+        /**
+         * @deprecated Use `setTrue` instead. Will be removed in future versions.
+         */
+        onTrue: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+        /**
+         * @deprecated Use `setFalse` instead. Will be removed in future versions.
+         */
+        onFalse: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+        /**
+         * @deprecated Use `toggle` instead. Will be removed in future versions.
+         */
+        onToggle: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+
+        setTrue: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+        setFalse: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+        toggle: (newDataOrCallback?: NewDataOrCallback<Data>, isEqual?: IsEqual<Data>) => void;
+
         data: Data;
         setData: Dispatch<SetStateAction<Data>>;
     },
@@ -40,45 +47,57 @@ export const useRegisterBoolean = <Data = unknown>(
 
     const defaultValues = useMemo(() => [initialBoolean, initialData] as BooleanAndData<Data>, []);
 
-    const onTrue = useCallback((newData?: Data, isEqual = equal) => {
+    const setTrue = useCallback((newDataOrCallback?: NewDataOrCallback<Data>, isEqual = equal) => {
         setBoolean(true);
 
-        if (newData !== undefined) {
+        if (newDataOrCallback !== undefined && !(newDataOrCallback instanceof Function)) {
             setData((prevState) => {
-                return isEqual(newData, prevState) ? prevState : newData;
+                return isEqual(newDataOrCallback, prevState) ? prevState : newDataOrCallback;
             });
+        }
+        if (newDataOrCallback !== undefined && newDataOrCallback instanceof Function) {
+            setData((prevData) => newDataOrCallback(prevData));
         }
     }, []);
 
-    const onFalse = useCallback((newData?: Data, isEqual = equal) => {
+    const setFalse = useCallback((newDataOrCallback?: NewDataOrCallback<Data>, isEqual = equal) => {
         setBoolean(false);
 
-        if (newData !== undefined) {
+        if (newDataOrCallback !== undefined && !(newDataOrCallback instanceof Function)) {
             setData((prevState) => {
-                return isEqual(newData, prevState) ? prevState : newData;
+                return isEqual(newDataOrCallback, prevState) ? prevState : newDataOrCallback;
             });
+        }
+        if (newDataOrCallback !== undefined && newDataOrCallback instanceof Function) {
+            setData((prevData) => newDataOrCallback(prevData));
         }
     }, []);
 
-    const onToggle = useCallback((newData?: Data, isEqual = equal) => {
-        setBoolean((prev) => !prev);
+    const toggle = useCallback((newDataOrCallback?: NewDataOrCallback<Data>, isEqual = equal) => {
+        setBoolean((prevState) => !prevState);
 
-        if (newData !== undefined) {
+        if (newDataOrCallback !== undefined && !(newDataOrCallback instanceof Function)) {
             setData((prevState) => {
-                return isEqual(newData, prevState) ? prevState : newData;
+                return isEqual(newDataOrCallback, prevState) ? prevState : newDataOrCallback;
             });
+        }
+        if (newDataOrCallback !== undefined && newDataOrCallback instanceof Function) {
+            setData((prevData) => newDataOrCallback(prevData));
         }
     }, []);
 
     const registerGlobalBooleanState = useCallback(() => {
         booleanStateManager.set(uniqueName, {
-            onTrue,
-            onFalse,
-            onToggle,
+            onTrue: setTrue,
+            onFalse: setFalse,
+            onToggle: toggle,
+            setFalse: setFalse,
+            setTrue: setTrue,
+            toggle: toggle,
             booleanAndData: defaultValues,
             setData: (args) => setData(args as unknown as Data),
         });
-    }, [defaultValues, onFalse, onToggle, onTrue, uniqueName]);
+    }, [defaultValues, setFalse, toggle, setTrue, uniqueName]);
 
     useEffect(() => {
         if (!booleanStateManager.has(uniqueName)) {
@@ -91,10 +110,16 @@ export const useRegisterBoolean = <Data = unknown>(
 
         return () => {
             booleanStateManager.delete(uniqueName);
+
+            if (booleanStateListeners.has(uniqueName)) {
+                booleanStateListeners.get(uniqueName)!.forEach((listener) => listener());
+            }
         };
     }, [registerGlobalBooleanState, uniqueName]);
 
     useEffect(() => {
+        if (uniqueName === '') return;
+
         const currentBooleanAndData = [boolean, data];
 
         booleanStateManager.set(
@@ -106,9 +131,9 @@ export const useRegisterBoolean = <Data = unknown>(
 
         if (booleanStateListeners.has(uniqueName)) {
             booleanStateListeners.get(uniqueName)!.forEach((listener) => listener());
-        } else {
-            forcedCallListener.set(uniqueName, (listener) => listener());
         }
+
+        forcedCallListener.set(uniqueName, (listener) => listener());
 
         return () => {
             forcedCallListener.delete(uniqueName);
@@ -118,9 +143,14 @@ export const useRegisterBoolean = <Data = unknown>(
     return [
         boolean,
         {
-            onTrue,
-            onFalse,
-            onToggle,
+            setTrue,
+            setFalse,
+            toggle,
+
+            onTrue: setTrue,
+            onFalse: setFalse,
+            onToggle: toggle,
+
             data,
             setData,
         },

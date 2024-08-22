@@ -2,7 +2,6 @@ import { useCallback, useRef, useSyncExternalStore } from 'react';
 
 import equal from 'fast-deep-equal';
 
-// import type { IsNeedUpdate } from '../globalStates/booleanStateListeners.ts';
 import { booleanStateListeners } from '../globalStates/booleanStateListeners.ts';
 import type { BooleanAndData } from '../globalStates/booleanStateManager.ts';
 import { booleanStateManager } from '../globalStates/booleanStateManager.ts';

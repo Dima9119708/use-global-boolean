@@ -3,13 +3,7 @@ import { useEffect } from 'react';
 
 import { generateUniqueName } from './utils/testUtils.ts';
 
-import {
-    WatchController,
-    globalBooleanActions,
-    useBooleanController,
-    useGlobalBoolean,
-    useWatchBoolean,
-} from '../lib';
+import { WatchController, globalBooleanActions, useBooleanController, useGlobalBoolean, useWatchBoolean } from '../lib';
 import { forcedCallListener } from '../lib/globalStates/forcedCallListener.ts';
 
 let uniqueName: string;
@@ -27,11 +21,11 @@ describe('Boolean State Management in Components', () => {
         };
 
         const TestComponent = () => {
-            const { onTrue } = useGlobalBoolean();
+            const { setTrue } = useGlobalBoolean();
 
             return (
                 <>
-                    <button role="button" onClick={() => onTrue(uniqueName)} />
+                    <button role="button" onClick={() => setTrue(uniqueName)} />
                     <Dialog />
                 </>
             );
@@ -47,10 +41,7 @@ describe('Boolean State Management in Components', () => {
     });
     test('should update dialog content after onTrue is called with data', () => {
         const Dialog = () => {
-            const [open, { data }] = useBooleanController<{ title: string; subtitle: string }>(
-                uniqueName,
-                false,
-            );
+            const [open, { data }] = useBooleanController<{ title: string; subtitle: string }>(uniqueName, false);
 
             return (
                 <div role="dialog" aria-modal={open}>
@@ -65,14 +56,11 @@ describe('Boolean State Management in Components', () => {
         };
 
         const TestComponent = () => {
-            const { onTrue } = useGlobalBoolean();
+            const { setTrue } = useGlobalBoolean();
 
             return (
                 <>
-                    <button
-                        role="button"
-                        onClick={() => onTrue(uniqueName, { title: 'title', subtitle: 'subtitle' })}
-                    />
+                    <button role="button" onClick={() => setTrue(uniqueName, { title: 'title', subtitle: 'subtitle' })} />
                     <Dialog />
                 </>
             );
@@ -265,7 +253,7 @@ describe('Boolean State Management in Components', () => {
 
         render(<TestComponent />);
 
-        expect(forcedCallListener.size).toBe(0);
+        expect(forcedCallListener.size).toBe(1);
     });
     test('should update forcedCallListener size correctly when WatchComponent is rendered after RegisterComponent with useWatchBoolean without initial values', () => {
         const WatchComponentAsHook = () => {
@@ -308,21 +296,14 @@ describe('Boolean State Management in Components', () => {
         let countRender1 = 0;
         let countRender2 = 0;
 
-        const TestComponent = (props: {
-            initialBooleanWatch?: boolean;
-            initialDataWatch?: string;
-        }) => {
+        const TestComponent = (props: { initialBooleanWatch?: boolean; initialDataWatch?: string }) => {
             const { initialDataWatch, initialBooleanWatch } = props;
 
             return (
                 <>
                     <WatchController>
                         {(props) => {
-                            const [show, data] = props.globalMethods.watchBoolean(
-                                uniqueName,
-                                initialBooleanWatch,
-                                initialDataWatch,
-                            );
+                            const [show, data] = props.globalMethods.watchBoolean(uniqueName, initialBooleanWatch, initialDataWatch);
 
                             ++countRender1;
 
@@ -332,7 +313,7 @@ describe('Boolean State Management in Components', () => {
 
                     <WatchController name={uniqueName}>
                         {(props) => {
-                            const [checked, { onTrue, setData }] = props.localState;
+                            const [checked, { setTrue, setData }] = props.localState;
 
                             ++countRender2;
 
@@ -341,7 +322,7 @@ describe('Boolean State Management in Components', () => {
                                     data-testid="enabled input"
                                     style={{ backgroundColor: checked ? 'green' : 'red' }}
                                     onClick={() => {
-                                        onTrue();
+                                        setTrue();
                                         setData(inputData);
                                     }}
                                 />
@@ -352,9 +333,7 @@ describe('Boolean State Management in Components', () => {
             );
         };
 
-        const { getByTestId, queryByTestId, rerender } = render(
-            <TestComponent initialDataWatch="" initialBooleanWatch={false} />,
-        );
+        const { getByTestId, queryByTestId, rerender } = render(<TestComponent initialDataWatch="" initialBooleanWatch={false} />);
 
         expect(queryByTestId('input')).toBe(null);
 
@@ -402,7 +381,7 @@ describe('Boolean State Management in Components', () => {
                         <tbody>
                             <WatchController key={`table.row`} name={`table.row`}>
                                 {(props) => {
-                                    const [active, { onTrue }] = props.localState;
+                                    const [active, { setTrue }] = props.localState;
 
                                     return (
                                         <tr
@@ -417,11 +396,8 @@ describe('Boolean State Management in Components', () => {
                                             <td
                                                 data-testid="edit-button"
                                                 onClick={() => {
-                                                    onTrue();
-                                                    props.globalMethods.onTrue(
-                                                        'dialog',
-                                                        dataDialog,
-                                                    );
+                                                    setTrue();
+                                                    props.globalMethods.setTrue('dialog', dataDialog);
                                                 }}
                                             >
                                                 ✏️
@@ -435,7 +411,7 @@ describe('Boolean State Management in Components', () => {
 
                     <WatchController name="dialog" initialData={{ name: '', age: '', gender: '' }}>
                         {(props) => {
-                            const [open, { data, onFalse }] = props.localState;
+                            const [open, { data, setFalse }] = props.localState;
 
                             return (
                                 <dialog data-testid="dialog" open={open}>
@@ -443,11 +419,7 @@ describe('Boolean State Management in Components', () => {
                                         <input name="name" value={data.name} readOnly />
                                         <input name="age" value={data.age} readOnly />
                                         <input name="gender" value={data.gender} readOnly />
-                                        <button
-                                            data-testid="cancel-button"
-                                            type="button"
-                                            onClick={() => onFalse()}
-                                        >
+                                        <button data-testid="cancel-button" type="button" onClick={() => setFalse()}>
                                             Cancel
                                         </button>
                                     </form>
@@ -483,7 +455,7 @@ describe('Boolean State Management in Components', () => {
         let renderCount = 0;
 
         const TestComponent = () => {
-            const [checked, { onTrue, data }] = useBooleanController(uniqueName);
+            const [checked, { setTrue, data }] = useBooleanController(uniqueName);
 
             useEffect(() => {
                 ++renderCount;
@@ -491,11 +463,8 @@ describe('Boolean State Management in Components', () => {
 
             return (
                 <>
-                    <button data-testid="button1" onClick={() => onTrue({ test: 'test' })} />
-                    <button
-                        data-testid="button2"
-                        onClick={() => globalBooleanActions.onTrue(uniqueName, { test: 'test' })}
-                    />
+                    <button data-testid="button1" onClick={() => setTrue({ test: 'test' })} />
+                    <button data-testid="button2" onClick={() => globalBooleanActions.setTrue(uniqueName, { test: 'test' })} />
                 </>
             );
         };
@@ -523,5 +492,75 @@ describe('Boolean State Management in Components', () => {
         fireEvent.click(getByTestId('button2'));
 
         expect(renderCount).toBe(2);
+    });
+    test('component should toggle and display correct data in nested watch controllers when state is toggled', () => {
+        const TestComponent = () => {
+            return (
+                <>
+                    <div data-testid="0" onClick={() => globalBooleanActions.toggle('a')}>
+                        Show "b" and "c"
+                    </div>
+                    <WatchController name="a">
+                        {(props) => {
+                            const [show] = props.localState;
+
+                            return (
+                                <>
+                                    <WatchController>
+                                        {(props) => {
+                                            const [, dataB] = props.globalMethods.watchBoolean<number>('b');
+                                            const [, dataC] = props.globalMethods.watchBoolean<number>('c');
+
+                                            return (
+                                                <>
+                                                    <div data-testid="1">{dataB}</div>
+                                                    <div data-testid="2">{dataC}</div>
+                                                </>
+                                            );
+                                        }}
+                                    </WatchController>
+
+                                    {show && (
+                                        <>
+                                            <WatchController name="b" initialData="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB">
+                                                {() => null}
+                                            </WatchController>
+                                            <WatchController name="c" initialData="CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC">
+                                                {(props) => {
+                                                    const [, data] = props.globalMethods.watchBoolean<number>('b');
+
+                                                    return <div data-testid="3">{data}</div>;
+                                                }}
+                                            </WatchController>
+                                        </>
+                                    )}
+                                </>
+                            );
+                        }}
+                    </WatchController>
+                </>
+            );
+        };
+
+        const { getByTestId, queryByTestId } = render(<TestComponent />);
+
+        const $1 = getByTestId('1');
+        const $2 = getByTestId('2');
+
+        expect($1.innerHTML).toBe('');
+        expect($2.innerHTML).toBe('');
+        expect(queryByTestId('3')).toBe(null);
+
+        fireEvent.click(getByTestId('0'));
+
+        expect($1.innerHTML).toBe('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+        expect($2.innerHTML).toBe('CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC');
+        expect(getByTestId('3').innerHTML).toBe('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+
+        fireEvent.click(getByTestId('0'));
+
+        expect($1.innerHTML).toBe('');
+        expect($2.innerHTML).toBe('');
+        expect(queryByTestId('3')).toBe(null);
     });
 });

@@ -5,6 +5,9 @@ export interface BooleanStateManagerValues {
     setData: <Data>(args: Data) => void;
     onFalse: () => void;
     onToggle: () => void;
+    setTrue: () => void;
+    setFalse: () => void;
+    toggle: () => void;
     booleanAndData: BooleanAndData;
 }
 

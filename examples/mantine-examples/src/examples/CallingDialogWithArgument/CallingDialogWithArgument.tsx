@@ -1,23 +1,23 @@
 import { Button, Dialog, Group, Text, TextInput } from '@mantine/core';
-import { useGlobalBoolean, useRegisterBoolean } from 'use-global-boolean';
+import { useBooleanController, useGlobalBoolean } from 'use-global-boolean';
 
 const MantineButton = () => {
-    const { onToggle } = useGlobalBoolean();
+    const { toggle } = useGlobalBoolean();
 
     return (
-        <Button onClick={() => onToggle('dialog', { email: 'hello@gluesticker.com' })}>
+        <Button onClick={() => toggle('dialog', { email: 'hello@gluesticker.com' })}>
             Toggle dialog
         </Button>
     );
 };
 
 const MantineDialog = () => {
-    const [opened, { onFalse, data }] = useRegisterBoolean('dialog', false, {
+    const [opened, { setFalse, data }] = useBooleanController('dialog', false, {
         email: '',
     });
 
     return (
-        <Dialog opened={opened} withCloseButton onClose={onFalse} size="lg" radius="md">
+        <Dialog opened={opened} withCloseButton onClose={setFalse} size="lg" radius="md">
             <Text size="sm" mb="xs" fw={500}>
                 Subscribe to email newsletter
             </Text>
