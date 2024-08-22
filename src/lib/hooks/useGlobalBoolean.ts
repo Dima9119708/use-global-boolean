@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from 'react';
 
 import equal from 'fast-deep-equal';
 
@@ -214,14 +214,6 @@ export const useGlobalBoolean = (): GlobalBooleanMethods => {
     const getSnapshot = useCallback(() => isSnapshotUpdated.current, []);
 
     useSyncExternalStore(subscribeToChanges, getSnapshot);
-
-    useEffect(
-        () =>
-            function cleanUp() {
-                booleanNamesWithInitialData.current.clear();
-            },
-        [],
-    );
 
     return {
         onTrue: globalBooleanActions.onTrue,
